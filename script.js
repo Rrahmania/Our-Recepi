@@ -6,14 +6,12 @@ let apiRecipes = [];
 const placeholderImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23d8b48c'/%3E%3Ctext x='50' y='55' font-size='14' text-anchor='middle' fill='%235c3e2b'%3E🍽️%3C/text%3E%3C/svg%3E";
 const categoriesList = ["Daging", "Ayam", "Ikan/Seafood", "Sayur", "Nasi", "Jajanan"];
 
-// ---------- STORAGE LOKAL (Sesi, Favorit, Rating) ----------
+// ---------- STORAGE LOKAL (Sesi, Favorit) ----------
 let currentUser = null;
 let favorites = new Set();
-let ratingsData = {};
+let apiComments = {};
 
 function loadAllData() {
-  const storedRatings = localStorage.getItem("nusantara_ratings");
-  ratingsData = storedRatings ? JSON.parse(storedRatings) : {};
   const storedSession = localStorage.getItem("nusantara_session");
   if(storedSession) {
     currentUser = JSON.parse(storedSession);
@@ -24,12 +22,81 @@ function loadAllData() {
     favorites = storedFav ? new Set(JSON.parse(storedFav)) : new Set();
   } else favorites = new Set();
 }
-function saveRatings() { localStorage.setItem("nusantara_ratings", JSON.stringify(ratingsData)); }
 function saveSession() {
   if(currentUser) localStorage.setItem("nusantara_session", JSON.stringify(currentUser));
   else localStorage.removeItem("nusantara_session");
 }
 function saveFavorites() { if(currentUser) localStorage.setItem(`fav_${currentUser.email}`, JSON.stringify([...favorites])); }
+
+async function fetchCommentsFromAPI(recipeId) {
+  const rid = recipeId.toString();
+  try {
+    const response = await fetch(`${API_BASE_URL}/comments?recipeId=${recipeId}`);
+    if (response.ok) {
+      apiComments[rid] = await response.json();
+      return apiComments[rid];
+    }
+  } catch (error) {
+    console.error("Gagal mengambil komentar:", error);
+  }
+  apiComments[rid] = [];
+  return apiComments[rid];
+}
+
+function getRecipeRating(recipeId) {
+  const comments = getComments(recipeId);
+  if (!comments.length) return 0;
+  const sum = comments.reduce((a, c) => a + c.rating, 0);
+  return sum / comments.length;
+}
+
+function getComments(recipeId) { return apiComments[recipeId.toString()] || []; }
+
+function getUserRating(recipeId) {
+  if (!currentUser) return null;
+  const comments = getComments(recipeId);
+  const userComment = comments.find(c => c.userId === currentUser.email);
+  return userComment ? userComment.rating : null;
+}
+
+function getUserCommentText(recipeId) {
+  if (!currentUser) return "";
+  const comments = getComments(recipeId);
+  const userComment = comments.find(c => c.userId === currentUser.email);
+  return userComment ? userComment.text : "";
+}
+
+async function submitComment(recipeId, userName, commentText, ratingValue) {
+  if (!currentUser) throw new Error('User belum login');
+  const payload = {
+    recipeId,
+    accountId: currentUser.id,
+    text: commentText.trim() || "(Tanpa komentar)",
+    rating: ratingValue
+  };
+  const response = await fetch(`${API_BASE_URL}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Gagal menyimpan komentar');
+  }
+  await fetchCommentsFromAPI(recipeId);
+}
+
+async function deleteCommentFromAPI(commentId, recipeId) {
+  if (!currentUser) throw new Error('User belum login');
+  const response = await fetch(`${API_BASE_URL}/comments/${commentId}?requesterId=${currentUser.id}`, {
+    method: 'DELETE'
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Gagal menghapus komentar');
+  }
+  await fetchCommentsFromAPI(recipeId);
+}
 
 // ---------- API RECIPES ----------
 async function fetchRecipesFromAPI() {
@@ -48,40 +115,47 @@ function getUserUploadedRecipes() {
   return currentUser ? apiRecipes.filter(r => r.author && r.author.email === currentUser.email) : [];
 }
 
-// ---------- RATING & COMMENTS (Lokal) ----------
-function updateAverageRating(recipeId) {
-  const rid = recipeId.toString();
-  if(ratingsData[rid] && ratingsData[rid].comments.length) {
-    const sum = ratingsData[rid].comments.reduce((a,c) => a + c.rating, 0);
-    ratingsData[rid].avgRating = sum / ratingsData[rid].comments.length;
-  } else if(ratingsData[rid]) ratingsData[rid].avgRating = 0;
-  else ratingsData[rid] = { comments: [], avgRating: 0 };
-  saveRatings();
+// ---------- RATING & COMMENTS ----------
+async function submitComment(recipeId, userName, commentText, ratingValue) {
+  if (!currentUser) throw new Error('Login dulu');
+  const payload = {
+    recipeId,
+    accountId: currentUser.id,
+    text: commentText.trim() || "(Tanpa komentar)",
+    rating: ratingValue
+  };
+  const response = await fetch(`${API_BASE_URL}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Gagal menyimpan komentar');
+  }
+  await fetchCommentsFromAPI(recipeId);
 }
-function addOrUpdateComment(recipeId, userName, commentText, ratingValue, userId) {
-  const rid = recipeId.toString();
-  if(!ratingsData[rid]) ratingsData[rid] = { comments: [], avgRating: 0 };
-  const existingIndex = ratingsData[rid].comments.findIndex(c => c.userId === userId);
-  const now = new Date().toLocaleString();
-  const newComment = { name: userName.trim() || "Anonim", text: commentText.trim() || "(Tanpa komentar)", rating: ratingValue, userId: userId, date: now };
-  if(existingIndex !== -1) ratingsData[rid].comments[existingIndex] = newComment;
-  else ratingsData[rid].comments.unshift(newComment);
-  updateAverageRating(recipeId);
-  saveRatings();
-  showToast(existingIndex !== -1 ? "Rating & komentar diperbarui" : "Rating berhasil dikirim", "success");
+
+function getRecipeRating(recipeId) {
+  const comments = getComments(recipeId);
+  if (!comments.length) return 0;
+  const sum = comments.reduce((a, c) => a + c.rating, 0);
+  return sum / comments.length;
 }
-function getRecipeRating(recipeId) { return ratingsData[recipeId.toString()]?.avgRating || 0; }
-function getComments(recipeId) { return ratingsData[recipeId.toString()]?.comments || []; }
+
+function getComments(recipeId) { return apiComments[recipeId.toString()] || []; }
+
 function getUserRating(recipeId) {
-  if(!currentUser) return null;
-  const rid = recipeId.toString();
-  const userComment = ratingsData[rid]?.comments.find(c => c.userId === currentUser.email);
+  if (!currentUser) return null;
+  const comments = getComments(recipeId);
+  const userComment = comments.find(c => c.userId === currentUser.email);
   return userComment ? userComment.rating : null;
 }
+
 function getUserCommentText(recipeId) {
-  if(!currentUser) return "";
-  const rid = recipeId.toString();
-  const userComment = ratingsData[rid]?.comments.find(c => c.userId === currentUser.email);
+  if (!currentUser) return "";
+  const comments = getComments(recipeId);
+  const userComment = comments.find(c => c.userId === currentUser.email);
   return userComment ? userComment.text : "";
 }
 
@@ -99,19 +173,16 @@ function showConfirm(message, onYes, onNo) {
   noBtn.addEventListener('click', handleNo);
   modal.onclick = (e) => { if(e.target === modal) handleNo(); };
 }
-function deleteCommentWithConfirm(recipeId, commentIndex, userId, element) {
-  showConfirm('Hapus komentar ini?', () => {
-    const rid = recipeId.toString();
-    if(ratingsData[rid] && ratingsData[rid].comments[commentIndex]) {
-      const comment = ratingsData[rid].comments[commentIndex];
-      if(currentUser && (currentUser.role_type === 'ADMIN' || comment.userId === currentUser.email)) {
-        ratingsData[rid].comments.splice(commentIndex, 1);
-        updateAverageRating(recipeId);
-        saveRatings();
-        showToast('Komentar dihapus', 'success');
-        if(currentModalRecipe && currentModalRecipe.id == recipeId) openModal(currentModalRecipe);
-        else renderCurrentView();
-      } else showToast('Tidak punya izin', 'error');
+function deleteCommentWithConfirm(recipeId, commentId, element) {
+  showConfirm('Hapus komentar ini?', async () => {
+    try {
+      await deleteCommentFromAPI(commentId, recipeId);
+      showToast('Komentar dihapus', 'success');
+      if(currentModalRecipe && currentModalRecipe.id == recipeId) await openModal(currentModalRecipe);
+      else renderCurrentView();
+    } catch (error) {
+      console.error(error);
+      showToast(error.message || 'Gagal menghapus komentar', 'error');
     }
   });
 }
@@ -539,9 +610,10 @@ function renderAdminDashboard() {
 // ---------- MODAL DETAIL RESEP ----------
 let currentModalRecipe = null;
 let selectedRating = 0;
-function openModal(recipe) {
+async function openModal(recipe) {
   currentModalRecipe = recipe;
   const modal = document.getElementById('recipeModal');
+  await fetchCommentsFromAPI(recipe.id);
   const avgRating = getRecipeRating(recipe.id);
   const userRating = getUserRating(recipe.id);
   const userCommentText = getUserCommentText(recipe.id);
@@ -563,9 +635,9 @@ function openModal(recipe) {
   `;
   const comments = getComments(recipe.id);
   let commentsHTML = `<h3>Komentar & Rating Pengguna Lain</h3>`;
-  commentsHTML += comments.length ? comments.map((c, idx) => {
+  commentsHTML += comments.length ? comments.map((c) => {
     const canDelete = (currentUser && (currentUser.role_type === 'ADMIN' || c.userId === currentUser.email));
-    return `<div class="comment-item"><strong>${c.name}</strong> ${renderStars(c.rating, false)}<br><small>${c.date}</small><p>${c.text}</p>${canDelete ? `<button class="delete-comment-btn" data-recipe="${recipe.id}" data-idx="${idx}">Hapus</button>` : ''}</div>`;
+    return `<div class="comment-item"><strong>${c.userName}</strong> ${renderStars(c.rating, false)}<br><small>${c.date}</small><p>${c.text}</p>${canDelete ? `<button class="delete-comment-btn" data-recipe="${recipe.id}" data-comment-id="${c.id}">Hapus</button>` : ''}</div>`;
   }).join('') : '<p>Belum ada komentar.</p>';
   let ratingFormHTML = '';
   if(!currentUser) ratingFormHTML = `<div class="login-prompt">Login untuk memberi rating & komentar.</div>`;
@@ -573,7 +645,7 @@ function openModal(recipe) {
     <div style="margin-top:1.5rem; border-top:1px solid var(--brown-light); padding-top:1rem;">
       <h3>Berikan Rating & Komentar</h3>
       <input type="text" id="commenterName" placeholder="Nama" style="width:100%; margin-bottom:8px;" value="${currentUser.username}">
-      <textarea id="commentText" rows="2" placeholder="Komentar Anda..." style="width:100%; margin-bottom:8px;">${userCommentText !== "(Tanpa komentar)" ? userCommentText : ""}</textarea>
+      <textarea id="commentText" rows="2" placeholder="Komentar Anda..." style="width:100%; margin-bottom:8px;">${userCommentText}</textarea>
       <div class="star-rating-input" id="starRatingInputModal">
         <i class="far fa-star" data-rating="1"></i><i class="far fa-star" data-rating="2"></i>
         <i class="far fa-star" data-rating="3"></i><i class="far fa-star" data-rating="4"></i><i class="far fa-star" data-rating="5"></i>
@@ -598,21 +670,32 @@ function openModal(recipe) {
         else { s.classList.remove('fas','selected'); s.classList.add('far'); }
       });
     });
-    document.getElementById('submitRatingBtn').onclick = () => {
+    document.getElementById('submitRatingBtn').onclick = async () => {
       if(!currentUser) return showToast('Login dulu', 'error');
       if(selectedRating === 0) return showToast('Pilih rating bintang 1-5', 'error');
       const name = document.getElementById('commenterName').value.trim() || currentUser.username;
       const comment = document.getElementById('commentText').value.trim();
-      addOrUpdateComment(recipe.id, name, comment, selectedRating, currentUser.email);
-      openModal(recipe);
+      try {
+        await submitComment(recipe.id, name, comment, selectedRating);
+        await openModal(recipe);
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Gagal menyimpan komentar', 'error');
+      }
     };
   }
   document.querySelectorAll('.delete-comment-btn').forEach(btn => {
-    btn.onclick = (e) => {
+    btn.onclick = async (e) => {
       e.stopPropagation();
       const recipeId = parseInt(btn.getAttribute('data-recipe'));
-      const idx = parseInt(btn.getAttribute('data-idx'));
-      deleteCommentWithConfirm(recipeId, idx, currentUser?.email, btn.closest('.comment-item'));
+      const commentId = parseInt(btn.getAttribute('data-comment-id'));
+      try {
+        await deleteCommentFromAPI(commentId, recipeId);
+        await openModal(recipe);
+      } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Gagal menghapus komentar', 'error');
+      }
     };
   });
   modal.style.display = 'flex';
