@@ -32,15 +32,22 @@ async function fetchCommentsFromAPI(recipeId) {
   const rid = recipeId.toString();
   try {
     const response = await fetch(`${API_BASE_URL}/comments?recipeId=${recipeId}`);
-    if (response.ok) {
-      apiComments[rid] = await response.json();
+    if (!response.ok) {
+      const message = `Gagal memuat komentar (status ${response.status})`;
+      console.error(message);
+      showToast(message, 'error');
+      apiComments[rid] = apiComments[rid] || [];
       return apiComments[rid];
     }
+
+    apiComments[rid] = await response.json();
+    return apiComments[rid];
   } catch (error) {
     console.error("Gagal mengambil komentar:", error);
+    showToast('Tidak bisa memuat komentar. Coba lagi.', 'error');
+    apiComments[rid] = apiComments[rid] || [];
+    return apiComments[rid];
   }
-  apiComments[rid] = [];
-  return apiComments[rid];
 }
 
 function getRecipeRating(recipeId) {
