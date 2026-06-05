@@ -1,6 +1,6 @@
 
 // ---------- KONFIGURASI API BACKEND ----------
-const API_BASE_URL = 'https://backendrecepi.onrender.com/api';
+const API_BASE_URL = 'https://backendrecepi-1.onrender.com';
 let apiRecipes = [];
 
 const placeholderImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23d8b48c'/%3E%3Ctext x='50' y='55' font-size='14' text-anchor='middle' fill='%235c3e2b'%3E🍽️%3C/text%3E%3C/svg%3E";
