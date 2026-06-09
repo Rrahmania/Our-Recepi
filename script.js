@@ -292,12 +292,30 @@ function startSliderInterval(sliderElement, nextButton) {
 }
 
 function generateSliderHTML() {
+    // Data 4 makanan nusantara (Bakso telah dihapus)
     const foodSlides = [
-      { name: "Rendang", region: "Padang", imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop" },
-      { name: "Sate Ayam", region: "Madura", imageUrl: "https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?w=800&h=500&fit=crop" },
-      { name: "Nasi Goreng", region: "Indonesia", imageUrl: "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&h=500&fit=crop" },
-      { name: "Gado-Gado", region: "Betawi", imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop" }
+      {
+        name: "Rendang",
+        region: "Padang",
+        imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop",
+      },
+      {
+        name: "Sate Ayam",
+        region: "Madura",
+        imageUrl: "https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?w=800&h=500&fit=crop",
+      },
+      {
+        name: "Nasi Goreng",
+        region: "Indonesia",
+        imageUrl: "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&h=500&fit=crop",
+      },
+      {
+        name: "Gado-Gado",
+        region: "Betawi",
+        imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop",
+      }
     ];
+  
     let slidesHTML = '';
     for (let food of foodSlides) {
       slidesHTML += `
@@ -307,26 +325,32 @@ function generateSliderHTML() {
         </div>
       `;
     }
+  
     return `
       <div class="slider-container">
-        <div class="slider" id="dynamicSlider">${slidesHTML}</div>
+        <div class="slider" id="dynamicSlider">
+          ${slidesHTML}
+        </div>
         <button class="prev" id="sliderPrev">❮</button>
         <button class="next" id="sliderNext">❯</button>
         <div class="dots" id="sliderDots"></div>
       </div>
     `;
-}
+  }
 
 function initSlider() {
   const slider = document.getElementById('dynamicSlider');
   if (!slider) return;
+  
   const slides = slider.querySelectorAll('.slide');
   if (slides.length === 0) return;
+  
   let currentIndex = 0;
   const totalSlides = slides.length;
   const prevBtn = document.getElementById('sliderPrev');
   const nextBtn = document.getElementById('sliderNext');
   const dotsContainer = document.getElementById('sliderDots');
+  
   dotsContainer.innerHTML = '';
   for (let i = 0; i < totalSlides; i++) {
     const dot = document.createElement('span');
@@ -336,10 +360,14 @@ function initSlider() {
     dotsContainer.appendChild(dot);
   }
   const dots = document.querySelectorAll('.dot');
+  
   function updateSlider() {
     slider.style.transform = `translateX(-${currentIndex * 100}%)`;
-    dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === currentIndex);
+    });
   }
+  
   function goToSlide(index) {
     if (index < 0) index = totalSlides - 1;
     if (index >= totalSlides) index = 0;
@@ -348,11 +376,15 @@ function initSlider() {
     stopSliderInterval();
     startSliderInterval(slider, nextBtn);
   }
+  
   function nextSlide() { goToSlide(currentIndex + 1); }
   function prevSlide() { goToSlide(currentIndex - 1); }
+  
   if (prevBtn) prevBtn.addEventListener('click', prevSlide);
   if (nextBtn) nextBtn.addEventListener('click', nextSlide);
+  
   startSliderInterval(slider, nextBtn);
+  
   const container = document.querySelector('.slider-container');
   if (container) {
     container.addEventListener('mouseenter', () => stopSliderInterval());
@@ -360,7 +392,7 @@ function initSlider() {
   }
 }
 
-// ========== FUNGSI HISTORY KOMENTAR ==========
+// ========== FUNGSI HISTORY KOMENTAR LENGKAP DENGAN TANGGAL RESEP ==========
 async function getAllCommentsWithRecipeDetails() {
   let allData = [];
   for (let recipe of getAllRecipes()) {
@@ -388,19 +420,24 @@ function openFullCommentHistoryModal() {
   modal.style.paddingTop = '2rem';
   modal.innerHTML = `
     <div class="modal-content" style="max-width: 900px; max-height: 85vh; overflow-y: auto;">
-      <button class="close-modal" id="closeHistoryModal" style="font-size: 28px; background: #f0e6d8; color: #5c3e2b; border: 1px solid #c7a47b; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer;">&times;</button>
+      <button class="close-modal" id="closeHistoryModal">&times;</button>
       <h2>📜 Seluruh History Komentar</h2>
       <p style="margin-bottom: 1rem; color: #5e4533;">Menampilkan semua komentar dari seluruh resep, lengkap dengan tanggal komentar dan tanggal resep dibuat.</p>
       <div id="fullHistoryList" style="margin-top: 1rem;">Memuat data...</div>
     </div>
   `;
   document.body.appendChild(modal);
+  
   const closeBtn = modal.querySelector('#closeHistoryModal');
   closeBtn.onclick = () => modal.remove();
   modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+  
   getAllCommentsWithRecipeDetails().then(data => {
     const container = modal.querySelector('#fullHistoryList');
-    if (data.length === 0) { container.innerHTML = '<p>Belum ada komentar dari user manapun.</p>'; return; }
+    if (data.length === 0) {
+      container.innerHTML = '<p>Belum ada komentar dari user manapun.</p>';
+      return;
+    }
     let html = '';
     for (let item of data) {
       const ratingStars = renderStars(item.comment.rating, false);
@@ -437,7 +474,11 @@ function escapeHtml(str) {
 function renderHome() {
   const popular = getAllRecipes().slice(0,6);
   const sliderHTML = generateSliderHTML();
-  return `${sliderHTML}<div class="page-header"><h2>Semua Resep Nusantara</h2></div><div class="recipes-grid">${renderRecipes(popular, true)}</div>`;
+  return `
+    ${sliderHTML}
+    <div class="page-header"><h2>Semua Resep Nusantara</h2></div>
+    <div class="recipes-grid">${renderRecipes(popular, true)}</div>
+  `;
 }
 
 function renderKategori() {
@@ -525,8 +566,10 @@ function renderTambahResep() {
     </div>`;
 }
 
+// ========== PROFIL HANYA UNTUK USER BIASA (TIDAK UNTUK ADMIN) ==========
 function renderProfil() {
   if(!currentUser) return `<div class="not-found">Login untuk melihat profil.</div>`;
+  // Jika admin mencoba mengakses, tampilkan pesan akses ditolak
   if(currentUser.role_type === 'ADMIN') {
     return `<div class="not-found">Fitur Profil tidak tersedia untuk Admin. Gunakan Dashboard Admin.</div>`;
   }
@@ -536,19 +579,26 @@ function renderProfil() {
     <div class="recipes-grid">${renderRecipes(getUserUploadedRecipes(), true)}</div>`;
 }
 
+// ========== DASHBOARD ADMIN ==========
 function renderAdminDashboard() {
   if (!currentUser || currentUser.role_type !== 'ADMIN') {
     return `<div class="not-found">Akses ditolak.</div>`;
   }
+
   const allRecipes = getAllRecipes();
   const totalRecipes = allRecipes.length;
+
   let totalComments = 0;
-  for (let recipe of allRecipes) totalComments += getComments(recipe.id).length;
+  for (let recipe of allRecipes) {
+    totalComments += getComments(recipe.id).length;
+  }
+
   return `
     <div class="page-header">
       <h2>Dashboard Admin</h2>
       <p style="color: var(--brown-dark); margin-top: 0.5rem;">Selamat datang, <strong>${currentUser.username}</strong> (Administrator)</p>
     </div>
+
     <div class="profile-stats" style="display: flex; gap: 1.5rem; justify-content: space-around; flex-wrap: wrap;">
       <div style="background: var(--green-pale); padding: 0.8rem 1.5rem; border-radius: 2rem; text-align: center;">
         <div style="font-size: 1.8rem; font-weight: bold;">${totalRecipes}</div>
@@ -559,17 +609,21 @@ function renderAdminDashboard() {
         <div style="font-size: 0.8rem;">Total Komentar</div>
       </div>
     </div>
+
     <div style="display: flex; justify-content: center; margin: 1.5rem 0;">
       <button id="fullHistoryBtn" class="btn-submit" style="background: var(--brown-dark); padding: 0.8rem 2rem; font-size: 1rem; display: inline-flex; align-items: center; gap: 10px;">
         <i class="fas fa-history"></i> 📜 Lihat Seluruh History Komentar (Lengkap dengan Tanggal Resep)
       </button>
     </div>
+
     <h3 style="margin-top: 1rem;">📋 Manajemen Semua Resep</h3>
-    <div class="recipes-grid">${renderRecipes(allRecipes, true)}</div>
+    <div class="recipes-grid">
+      ${renderRecipes(allRecipes, true)}
+    </div>
   `;
 }
 
-// ========== MODAL DETAIL RESEP DENGAN TOMBOL TERANG ==========
+// ---------- MODAL DETAIL RESEP ----------
 let currentModalRecipe = null;
 let selectedRating = 0;
 async function openModal(recipe) {
@@ -577,11 +631,11 @@ async function openModal(recipe) {
   const modal = document.getElementById('recipeModal');
   await fetchCommentsFromAPI(recipe.id);
   const avgRating = getRecipeRating(recipe.id);
+  const userRating = getUserRating(recipe.id);
   const userCommentText = getUserCommentText(recipe.id);
   const imgSource = recipe.imageUrl || placeholderImage;
-  
   let modalHTML = `
-    <button class="close-modal" id="closeModalBtn" style="font-size: 28px; background: #f0e6d8; color: #5c3e2b; border: 1px solid #c7a47b; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;">&times;</button>
+    <button class="close-modal" id="closeModalBtn">&times;</button>
     <img class="modal-img" src="${imgSource}" alt="${recipe.name}" onerror="this.src='${placeholderImage}'">
     <h2 style="color: var(--brown-dark); margin-bottom: 0.5rem;">${recipe.name}</h2>
     <div style="margin-bottom: 0.8rem;">
@@ -615,18 +669,9 @@ async function openModal(recipe) {
       <button id="submitRatingBtn" class="btn-submit" style="margin-top:12px;">Kirim Rating & Komentar</button>
     </div>
   `;
-  
-  const backButtonHTML = `<div style="text-align: center; margin-top: 1.5rem;"><button id="backFromModalBtn" class="btn-submit" style="background: #e0c8a8; color: #3b2c1e; border: none; padding: 0.5rem 1.5rem; font-size: 1rem; border-radius: 2rem; cursor: pointer; font-weight: 600;">Kembali</button></div>`;
-  
   const modalContent = document.querySelector('#recipeModal .modal-content');
-  modalContent.innerHTML = modalHTML + commentsHTML + `<div id="ratingFormContainer">${ratingFormHTML}</div>` + backButtonHTML;
-  
-  const closeModal = () => { modal.style.display = 'none'; document.body.style.overflow = ''; };
-  const closeBtn = document.getElementById('closeModalBtn');
-  const backBtn = document.getElementById('backFromModalBtn');
-  if (closeBtn) closeBtn.onclick = closeModal;
-  if (backBtn) backBtn.onclick = closeModal;
-  
+  modalContent.innerHTML = modalHTML + commentsHTML + `<div id="ratingFormContainer">${ratingFormHTML}</div>`;
+  document.getElementById('closeModalBtn').onclick = () => { modal.style.display = 'none'; document.body.style.overflow = ''; };
   if(currentUser) {
     const stars = document.querySelectorAll('#starRatingInputModal i');
     const existingRating = getUserRating(recipe.id);
@@ -729,10 +774,12 @@ function renderCurrentView() {
   }
 }
 
+// ========== SETUP NAVIGASI dengan pengecekan akses Profil untuk Admin ==========
 function setupNav() {
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const view = e.currentTarget.getAttribute('data-view');
+      // Cegah akses ke halaman Profil jika role admin
       if(view === 'profil' && currentUser && currentUser.role_type === 'ADMIN') {
         showToast('Fitur Profil tidak tersedia untuk Admin.', 'error');
         return;
@@ -750,6 +797,7 @@ function setupNav() {
     });
   });
 }
+
 function highlightNav() {
   document.querySelectorAll('.nav-btn').forEach(btn => {
     if(btn.getAttribute('data-view') === currentView) btn.classList.add('active');
@@ -793,17 +841,23 @@ function showAuthModal(registerMode = false) {
 }
 function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
 
+// ========== UPDATE UI SETELAH AUTH (Sembunyikan Tombol Profil untuk Admin) ==========
 function updateUIAfterAuth() {
   const g = document.getElementById('userGreeting');
   const a = document.getElementById('authBtn');
   const ad = document.getElementById('adminDashboardBtn');
   const profilBtn = document.querySelector('.nav-btn[data-view="profil"]');
+  
   if(currentUser) {
     g.innerText = `Halo, ${currentUser.username}`;
     a.innerText = "Logout";
     a.onclick = () => logoutWithConfirm();
     ad.style.display = currentUser.role_type === 'ADMIN' ? 'inline-flex' : 'none';
-    if(profilBtn) profilBtn.style.display = currentUser.role_type === 'ADMIN' ? 'none' : 'inline-flex';
+    // Sembunyikan tombol Profil jika admin
+    if(profilBtn) {
+      profilBtn.style.display = currentUser.role_type === 'ADMIN' ? 'none' : 'inline-flex';
+    }
+    // Jika admin sedang berada di halaman Profil, alihkan ke Dashboard Admin
     if(currentUser.role_type === 'ADMIN' && currentView === 'profil') {
       currentView = 'admin';
       renderCurrentView();
@@ -814,7 +868,7 @@ function updateUIAfterAuth() {
     a.innerText = "Login";
     a.onclick = () => showAuthModal(false);
     ad.style.display = 'none';
-    if(profilBtn) profilBtn.style.display = 'inline-flex';
+    if(profilBtn) profilBtn.style.display = 'inline-flex'; // tampilkan untuk user biasa
   }
 }
 
