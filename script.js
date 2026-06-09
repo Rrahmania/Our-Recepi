@@ -49,6 +49,12 @@ async function fetchCommentsFromAPI(recipeId) {
   }
 }
 
+// 🔥 FUNGSI BARU: Memuat komentar untuk semua resep sekaligus (agar rating langsung muncul di card)
+async function loadAllCommentsForRecipes() {
+  const promises = apiRecipes.map(recipe => fetchCommentsFromAPI(recipe.id));
+  await Promise.all(promises);
+}
+
 function getRecipeRating(recipeId) {
   const comments = getComments(recipeId);
   if (!comments.length) return 0;
@@ -90,6 +96,14 @@ async function submitComment(recipeId, userName, commentText, ratingValue) {
     throw new Error(errorText || 'Gagal menyimpan komentar');
   }
   await fetchCommentsFromAPI(recipeId);
+  
+  // 🔄 Refresh seluruh tampilan agar rating di card terbaru
+  renderCurrentView();
+  
+  // Jika modal sedang terbuka untuk resep yang sama, buka ulang agar datanya sinkron
+  if (currentModalRecipe && currentModalRecipe.id === recipeId) {
+    await openModal(currentModalRecipe);
+  }
 }
 
 async function deleteCommentFromAPI(commentId, recipeId) {
@@ -102,6 +116,7 @@ async function deleteCommentFromAPI(commentId, recipeId) {
     throw new Error(errorText || 'Gagal menghapus komentar');
   }
   await fetchCommentsFromAPI(recipeId);
+  // Tidak perlu render di sini, karena sudah di-handle oleh deleteCommentWithConfirm
 }
 
 // ---------- API RECIPES ----------
@@ -110,6 +125,8 @@ async function fetchRecipesFromAPI() {
     const response = await fetch(`${API_BASE_URL}/recipes`);
     if (response.ok) {
       apiRecipes = await response.json();
+      // 🔥 LOAD SEMUA RATING & KOMENTAR SEKALIGUS
+      await loadAllCommentsForRecipes();
       renderCurrentView();
     }
   } catch (error) {
@@ -140,8 +157,14 @@ function deleteCommentWithConfirm(recipeId, commentId, element) {
     try {
       await deleteCommentFromAPI(commentId, recipeId);
       showToast('Komentar dihapus', 'success');
-      if(currentModalRecipe && currentModalRecipe.id == recipeId) await openModal(currentModalRecipe);
-      else renderCurrentView();
+      
+      // 🔄 Refresh seluruh tampilan
+      renderCurrentView();
+      
+      // Jika modal terbuka untuk resep yang sama, buka ulang
+      if (currentModalRecipe && currentModalRecipe.id == recipeId) {
+        await openModal(currentModalRecipe);
+      }
     } catch (error) {
       console.error(error);
       showToast(error.message || 'Gagal menghapus komentar', 'error');
@@ -292,7 +315,7 @@ function startSliderInterval(sliderElement, nextButton) {
 }
 
 function generateSliderHTML() {
-    // Data 4 makanan nusantara (Bakso telah dihapus)
+    // Data 4 makanan nusantara
     const foodSlides = [
       {
         name: "Rendang",
@@ -566,10 +589,9 @@ function renderTambahResep() {
     </div>`;
 }
 
-// ========== PROFIL HANYA UNTUK USER BIASA (TIDAK UNTUK ADMIN) ==========
+// ========== PROFIL HANYA UNTUK USER BIASA ==========
 function renderProfil() {
   if(!currentUser) return `<div class="not-found">Login untuk melihat profil.</div>`;
-  // Jika admin mencoba mengakses, tampilkan pesan akses ditolak
   if(currentUser.role_type === 'ADMIN') {
     return `<div class="not-found">Fitur Profil tidak tersedia untuk Admin. Gunakan Dashboard Admin.</div>`;
   }
@@ -697,7 +719,14 @@ async function openModal(recipe) {
       e.stopPropagation();
       const recipeId = parseInt(btn.getAttribute('data-recipe'));
       const commentId = parseInt(btn.getAttribute('data-comment-id'));
-      try { await deleteCommentFromAPI(commentId, recipeId); await openModal(recipe); }
+      try { 
+        await deleteCommentFromAPI(commentId, recipeId);
+        // setelah hapus, refresh modal dan tampilan
+        renderCurrentView();
+        if (currentModalRecipe && currentModalRecipe.id === recipeId) {
+          await openModal(currentModalRecipe);
+        }
+      }
       catch (error) { console.error(error); showToast(error.message || 'Gagal menghapus komentar', 'error'); }
     };
   });
@@ -774,12 +803,11 @@ function renderCurrentView() {
   }
 }
 
-// ========== SETUP NAVIGASI dengan pengecekan akses Profil untuk Admin ==========
+// ========== SETUP NAVIGASI ==========
 function setupNav() {
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const view = e.currentTarget.getAttribute('data-view');
-      // Cegah akses ke halaman Profil jika role admin
       if(view === 'profil' && currentUser && currentUser.role_type === 'ADMIN') {
         showToast('Fitur Profil tidak tersedia untuk Admin.', 'error');
         return;
@@ -841,7 +869,7 @@ function showAuthModal(registerMode = false) {
 }
 function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
 
-// ========== UPDATE UI SETELAH AUTH (Sembunyikan Tombol Profil untuk Admin) ==========
+// ========== UPDATE UI SETELAH AUTH ==========
 function updateUIAfterAuth() {
   const g = document.getElementById('userGreeting');
   const a = document.getElementById('authBtn');
@@ -853,11 +881,9 @@ function updateUIAfterAuth() {
     a.innerText = "Logout";
     a.onclick = () => logoutWithConfirm();
     ad.style.display = currentUser.role_type === 'ADMIN' ? 'inline-flex' : 'none';
-    // Sembunyikan tombol Profil jika admin
     if(profilBtn) {
       profilBtn.style.display = currentUser.role_type === 'ADMIN' ? 'none' : 'inline-flex';
     }
-    // Jika admin sedang berada di halaman Profil, alihkan ke Dashboard Admin
     if(currentUser.role_type === 'ADMIN' && currentView === 'profil') {
       currentView = 'admin';
       renderCurrentView();
@@ -868,7 +894,7 @@ function updateUIAfterAuth() {
     a.innerText = "Login";
     a.onclick = () => showAuthModal(false);
     ad.style.display = 'none';
-    if(profilBtn) profilBtn.style.display = 'inline-flex'; // tampilkan untuk user biasa
+    if(profilBtn) profilBtn.style.display = 'inline-flex';
   }
 }
 
