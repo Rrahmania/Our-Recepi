@@ -942,6 +942,32 @@ function modalInit() {
   window.addEventListener('click', (e) => { if(e.target === document.getElementById('authModal')) closeAuthModal(); });
 }
 
+// ========== BURGER MENU TOGGLE ==========
+const burgerBtn = document.getElementById('burgerBtn');
+const navLinks = document.getElementById('navLinks');
+
+if (burgerBtn && navLinks) {
+  burgerBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    navLinks.classList.toggle('show');
+  });
+
+  // Tutup menu jika klik di luar menu
+  document.addEventListener('click', (event) => {
+    if (!navLinks.contains(event.target) && !burgerBtn.contains(event.target)) {
+      navLinks.classList.remove('show');
+    }
+  });
+
+  // Tutup menu setelah klik salah satu tombol navigasi
+  const allNavBtns = document.querySelectorAll('.nav-links .nav-btn');
+  allNavBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      navLinks.classList.remove('show');
+    });
+  });
+}
+
 // ---------- INIT ----------
 loadAllData();
 setupNav();
