@@ -786,3 +786,74 @@ textarea:focus {
     padding: 8px 12px;
   }
 }
+
+/* ========== BURGER MENU (RESPONSIVE) ========== */
+.burger-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  font-size: 1.8rem;
+  color: var(--brown-dark);
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-left: auto;
+  transition: 0.2s;
+}
+
+.burger-btn:hover {
+  color: var(--green-deep);
+  transform: scale(1.05);
+}
+
+/* Untuk layar desktop, nav-links tampil horizontal */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* Untuk layar mobile (≤ 768px) */
+@media (max-width: 768px) {
+  .burger-btn {
+    display: block;
+  }
+
+  .nav-links {
+    display: none; /* disembunyikan default */
+    position: absolute;
+    top: 85px; /* sesuaikan dengan tinggi navbar */
+    left: 0;
+    width: 100%;
+    background: rgba(247, 237, 224, 0.98);
+    backdrop-filter: blur(12px);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    border-radius: 0 0 2rem 2rem;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    z-index: 200;
+    padding: 1rem 0;
+  }
+
+  .nav-links.show {
+    display: flex;
+  }
+
+  .nav-links .nav-btn,
+  .nav-links .user-area {
+    margin: 0.3rem 1rem;
+    justify-content: center;
+  }
+
+  .nav-links .user-area {
+    margin-left: 0;
+    background: transparent;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+  }
+
+  .navbar {
+    position: relative;
+  }
+}
