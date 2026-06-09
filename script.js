@@ -121,9 +121,6 @@ function getUserUploadedRecipes() {
   return currentUser ? apiRecipes.filter(r => r.author && r.author.email === currentUser.email) : [];
 }
 
-// ---------- RATING & COMMENTS (duplikat dihapus) ----------
-// sudah didefinisikan di atas
-
 // ---------- KONFIRMASI & TOAST ----------
 function showConfirm(message, onYes, onNo) {
   const modal = document.getElementById('confirmModal');
@@ -184,7 +181,7 @@ function toggleFavorite(id) {
   return true;
 }
 
-// ---------- TAMBAH RESEP (DENGAN BAHAN & LANGKAH DINAMIS) ----------
+// ---------- TAMBAH RESEP ----------
 async function addNewRecipe(recipeData, imageBase64) {
   if(!currentUser) { showToast('Login untuk menambah resep', 'error'); return false; }
   const newRecipePayload = {
@@ -277,7 +274,7 @@ function renderRecipes(recipesArray, showDeleteForOwner = true) {
 let activeCategory = "Daging";
 let currentView = "home";
 
-// ========== SLIDER DENGAN 5 GAMBAR MAKANAN TETAP ==========
+// ========== SLIDER ==========
 let sliderInterval = null;
 
 function stopSliderInterval() {
@@ -295,30 +292,12 @@ function startSliderInterval(sliderElement, nextButton) {
 }
 
 function generateSliderHTML() {
-    // Data 5 makanan nusantara dengan gambar asli (Unsplash)
     const foodSlides = [
-      {
-        name: "Rendang",
-        region: "Padang",
-        imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop",
-      },
-      {
-        name: "Sate Ayam",
-        region: "Madura",
-        imageUrl: "https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?w=800&h=500&fit=crop",
-      },
-      {
-        name: "Nasi Goreng",
-        region: "Indonesia",
-        imageUrl: "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&h=500&fit=crop",
-      },
-      {
-        name: "Gado-Gado",
-        region: "Betawi",
-        imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop",
-      },
+      { name: "Rendang", region: "Padang", imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop" },
+      { name: "Sate Ayam", region: "Madura", imageUrl: "https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?w=800&h=500&fit=crop" },
+      { name: "Nasi Goreng", region: "Indonesia", imageUrl: "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&h=500&fit=crop" },
+      { name: "Gado-Gado", region: "Betawi", imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop" }
     ];
-  
     let slidesHTML = '';
     for (let food of foodSlides) {
       slidesHTML += `
@@ -328,32 +307,26 @@ function generateSliderHTML() {
         </div>
       `;
     }
-  
     return `
       <div class="slider-container">
-        <div class="slider" id="dynamicSlider">
-          ${slidesHTML}
-        </div>
+        <div class="slider" id="dynamicSlider">${slidesHTML}</div>
         <button class="prev" id="sliderPrev">❮</button>
         <button class="next" id="sliderNext">❯</button>
         <div class="dots" id="sliderDots"></div>
       </div>
     `;
-  }
+}
 
 function initSlider() {
   const slider = document.getElementById('dynamicSlider');
   if (!slider) return;
-  
   const slides = slider.querySelectorAll('.slide');
   if (slides.length === 0) return;
-  
   let currentIndex = 0;
   const totalSlides = slides.length;
   const prevBtn = document.getElementById('sliderPrev');
   const nextBtn = document.getElementById('sliderNext');
   const dotsContainer = document.getElementById('sliderDots');
-  
   dotsContainer.innerHTML = '';
   for (let i = 0; i < totalSlides; i++) {
     const dot = document.createElement('span');
@@ -363,14 +336,10 @@ function initSlider() {
     dotsContainer.appendChild(dot);
   }
   const dots = document.querySelectorAll('.dot');
-  
   function updateSlider() {
     slider.style.transform = `translateX(-${currentIndex * 100}%)`;
-    dots.forEach((dot, i) => {
-      dot.classList.toggle('active', i === currentIndex);
-    });
+    dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
   }
-  
   function goToSlide(index) {
     if (index < 0) index = totalSlides - 1;
     if (index >= totalSlides) index = 0;
@@ -379,15 +348,11 @@ function initSlider() {
     stopSliderInterval();
     startSliderInterval(slider, nextBtn);
   }
-  
   function nextSlide() { goToSlide(currentIndex + 1); }
   function prevSlide() { goToSlide(currentIndex - 1); }
-  
   if (prevBtn) prevBtn.addEventListener('click', prevSlide);
   if (nextBtn) nextBtn.addEventListener('click', nextSlide);
-  
   startSliderInterval(slider, nextBtn);
-  
   const container = document.querySelector('.slider-container');
   if (container) {
     container.addEventListener('mouseenter', () => stopSliderInterval());
@@ -395,15 +360,84 @@ function initSlider() {
   }
 }
 
-// ========== RENDER HOME DENGAN SLIDER ==========
+// ========== FUNGSI HISTORY KOMENTAR ==========
+async function getAllCommentsWithRecipeDetails() {
+  let allData = [];
+  for (let recipe of getAllRecipes()) {
+    await fetchCommentsFromAPI(recipe.id);
+    const comments = getComments(recipe.id);
+    const recipeCreatedDate = recipe.createdAt ? new Date(recipe.createdAt).toLocaleString('id-ID') : 'Tidak diketahui';
+    for (let comment of comments) {
+      allData.push({
+        recipeName: recipe.name,
+        recipeCreatedDate: recipeCreatedDate,
+        comment: comment,
+        commentDate: comment.date
+      });
+    }
+  }
+  allData.sort((a, b) => new Date(b.commentDate) - new Date(a.commentDate));
+  return allData;
+}
+
+function openFullCommentHistoryModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.style.display = 'flex';
+  modal.style.alignItems = 'flex-start';
+  modal.style.paddingTop = '2rem';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 900px; max-height: 85vh; overflow-y: auto;">
+      <button class="close-modal" id="closeHistoryModal" style="font-size: 28px; background: #f0e6d8; color: #5c3e2b; border: 1px solid #c7a47b; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer;">&times;</button>
+      <h2>📜 Seluruh History Komentar</h2>
+      <p style="margin-bottom: 1rem; color: #5e4533;">Menampilkan semua komentar dari seluruh resep, lengkap dengan tanggal komentar dan tanggal resep dibuat.</p>
+      <div id="fullHistoryList" style="margin-top: 1rem;">Memuat data...</div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  const closeBtn = modal.querySelector('#closeHistoryModal');
+  closeBtn.onclick = () => modal.remove();
+  modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+  getAllCommentsWithRecipeDetails().then(data => {
+    const container = modal.querySelector('#fullHistoryList');
+    if (data.length === 0) { container.innerHTML = '<p>Belum ada komentar dari user manapun.</p>'; return; }
+    let html = '';
+    for (let item of data) {
+      const ratingStars = renderStars(item.comment.rating, false);
+      html += `
+        <div class="comment-item" style="margin-bottom: 1.2rem; border-left: 4px solid var(--green-soft);">
+          <div><strong>${escapeHtml(item.comment.userName)}</strong> ${ratingStars}</div>
+          <div style="font-size: 0.8rem; color: #7b5a41;">
+            📌 Resep: <strong>${escapeHtml(item.recipeName)}</strong> 
+            (dibuat: ${item.recipeCreatedDate})
+          </div>
+          <div style="font-size: 0.75rem; color: #8b5a3c;">🕒 Komentar dikirim: ${item.comment.date}</div>
+          <p style="margin-top: 8px;">${escapeHtml(item.comment.text)}</p>
+        </div>
+      `;
+    }
+    container.innerHTML = html;
+  }).catch(err => {
+    modal.querySelector('#fullHistoryList').innerHTML = '<p class="warning">Gagal memuat data komentar.</p>';
+    console.error(err);
+  });
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
+}
+
+// ========== RENDER HOME ==========
 function renderHome() {
   const popular = getAllRecipes().slice(0,6);
   const sliderHTML = generateSliderHTML();
-  return `
-    ${sliderHTML}
-    <div class="page-header"><h2>Semua Resep Nusantara</h2></div>
-    <div class="recipes-grid">${renderRecipes(popular, true)}</div>
-  `;
+  return `${sliderHTML}<div class="page-header"><h2>Semua Resep Nusantara</h2></div><div class="recipes-grid">${renderRecipes(popular, true)}</div>`;
 }
 
 function renderKategori() {
@@ -419,98 +453,59 @@ function renderFavorite() {
   return `<div class="page-header"><h2>Resep Favorit</h2></div><div class="recipes-grid">${renderRecipes(all.filter(r => isFavorite(r.id)), true)}</div>`;
 }
 
-// ========== FUNGSI UNTUK RENUMBER BAHAN DAN LANGKAH (OTOMATIS) ==========
+// ========== FUNGSI UNTUK RENUMBER BAHAN DAN LANGKAH ==========
 function renumberIngredients() {
   const containers = document.querySelectorAll('#ingredientsContainer .dynamic-ingredient');
   containers.forEach((container, idx) => {
     const input = container.querySelector('input[name="ingredient"]');
-    if (input) {
-      input.placeholder = `Bahan ${idx + 1}`;
-    }
+    if (input) input.placeholder = `Bahan ${idx + 1}`;
   });
 }
-
 function renumberSteps() {
   const containers = document.querySelectorAll('#stepsContainer .dynamic-step');
   containers.forEach((container, idx) => {
     const input = container.querySelector('input[name="step"]');
-    if (input) {
-      input.placeholder = `Langkah ${idx + 1}`;
-    }
+    if (input) input.placeholder = `Langkah ${idx + 1}`;
   });
 }
-
 function initDynamicForm() {
-  // Tombol hapus bahan
   document.querySelectorAll('#ingredientsContainer .remove-ingredient-btn').forEach(btn => {
     btn.removeEventListener('click', btn._listener);
-    const newListener = function() {
-      this.closest('.dynamic-ingredient').remove();
-      renumberIngredients();
-    };
+    const newListener = function() { this.closest('.dynamic-ingredient').remove(); renumberIngredients(); };
     btn.addEventListener('click', newListener);
     btn._listener = newListener;
   });
-  
-  // Tombol hapus langkah
   document.querySelectorAll('#stepsContainer .remove-step-btn').forEach(btn => {
     btn.removeEventListener('click', btn._listener);
-    const newListener = function() {
-      this.closest('.dynamic-step').remove();
-      renumberSteps();
-    };
+    const newListener = function() { this.closest('.dynamic-step').remove(); renumberSteps(); };
     btn.addEventListener('click', newListener);
     btn._listener = newListener;
   });
-  
-  renumberIngredients();
-  renumberSteps();
+  renumberIngredients(); renumberSteps();
 }
-
-// ---- FUNGSI TAMBAH BAHAN & LANGKAH DENGAN RENUMBER ----
 function addIngredientField() {
   const container = document.getElementById('ingredientsContainer');
   const newDiv = document.createElement('div');
   newDiv.className = 'dynamic-ingredient';
-  newDiv.style.display = 'flex';
-  newDiv.style.gap = '8px';
-  newDiv.style.marginBottom = '8px';
+  newDiv.style.display = 'flex'; newDiv.style.gap = '8px'; newDiv.style.marginBottom = '8px';
   const currentCount = container.querySelectorAll('.dynamic-ingredient').length;
-  newDiv.innerHTML = `
-    <input type="text" name="ingredient" placeholder="Bahan ${currentCount + 1}" style="flex:1;">
-    <button type="button" class="remove-ingredient-btn" style="background:#a94442; color:white; border:none; padding:0 12px; border-radius:20px;">Hapus</button>
-  `;
+  newDiv.innerHTML = `<input type="text" name="ingredient" placeholder="Bahan ${currentCount + 1}" style="flex:1;"><button type="button" class="remove-ingredient-btn" style="background:#a94442; color:white; border:none; padding:0 12px; border-radius:20px;">Hapus</button>`;
   container.appendChild(newDiv);
-  const delBtn = newDiv.querySelector('.remove-ingredient-btn');
-  delBtn.addEventListener('click', function() {
-    newDiv.remove();
-    renumberIngredients();
-  });
+  newDiv.querySelector('.remove-ingredient-btn').addEventListener('click', () => { newDiv.remove(); renumberIngredients(); });
   renumberIngredients();
 }
-
 function addStepField() {
   const container = document.getElementById('stepsContainer');
   const newDiv = document.createElement('div');
   newDiv.className = 'dynamic-step';
-  newDiv.style.display = 'flex';
-  newDiv.style.gap = '8px';
-  newDiv.style.marginBottom = '8px';
+  newDiv.style.display = 'flex'; newDiv.style.gap = '8px'; newDiv.style.marginBottom = '8px';
   const currentCount = container.querySelectorAll('.dynamic-step').length;
-  newDiv.innerHTML = `
-    <input type="text" name="step" placeholder="Langkah ${currentCount + 1}" style="flex:1;">
-    <button type="button" class="remove-step-btn" style="background:#a94442; color:white; border:none; padding:0 12px; border-radius:20px;">Hapus</button>
-  `;
+  newDiv.innerHTML = `<input type="text" name="step" placeholder="Langkah ${currentCount + 1}" style="flex:1;"><button type="button" class="remove-step-btn" style="background:#a94442; color:white; border:none; padding:0 12px; border-radius:20px;">Hapus</button>`;
   container.appendChild(newDiv);
-  const delBtn = newDiv.querySelector('.remove-step-btn');
-  delBtn.addEventListener('click', function() {
-    newDiv.remove();
-    renumberSteps();
-  });
+  newDiv.querySelector('.remove-step-btn').addEventListener('click', () => { newDiv.remove(); renumberSteps(); });
   renumberSteps();
 }
 
-// ---------- FORM TAMBAH RESEP (TANPA DAERAH, WAKTU, KESULITAN) ----------
 function renderTambahResep() {
   if(!currentUser || currentUser.role_type === 'ADMIN') return `<div class="not-found">Silakan login sebagai User untuk menambah resep.</div>`;
   return `<div class="page-header"><h2>Tambah Resep</h2></div>
@@ -522,29 +517,8 @@ function renderTambahResep() {
           <div class="form-row"><label>Deskripsi</label><input type="text" id="recipeDesc" placeholder="Deskripsi singkat resep"></div>
           <div class="form-row"><label>Foto Makanan (JPG/PNG)</label><input type="file" id="recipeImageFile" accept="image/jpeg,image/png"></div>
           <div id="imagePreviewContainer" style="display:none;"><img id="imagePreview" class="image-preview" alt="Preview"></div>
-          
-          <div class="form-row">
-            <label>Bahan-bahan</label>
-            <div id="ingredientsContainer">
-              <div class="dynamic-ingredient" style="display:flex; gap:8px; margin-bottom:8px;">
-                <input type="text" name="ingredient" placeholder="Bahan 1" style="flex:1;">
-                <button type="button" class="remove-ingredient-btn" style="background:#a94442; color:white; border:none; padding:0 12px; border-radius:20px;">Hapus</button>
-              </div>
-            </div>
-            <button type="button" id="addIngredientBtn" class="btn-submit" style="background:var(--brown-medium); padding:0.5rem; margin-top:0;">+ Tambah Bahan</button>
-          </div>
-          
-          <div class="form-row">
-            <label>Langkah-langkah</label>
-            <div id="stepsContainer">
-              <div class="dynamic-step" style="display:flex; gap:8px; margin-bottom:8px;">
-                <input type="text" name="step" placeholder="Langkah 1" style="flex:1;">
-                <button type="button" class="remove-step-btn" style="background:#a94442; color:white; border:none; padding:0 12px; border-radius:20px;">Hapus</button>
-              </div>
-            </div>
-            <button type="button" id="addStepBtn" class="btn-submit" style="background:var(--brown-medium); padding:0.5rem; margin-top:0;">+ Tambah Langkah</button>
-          </div>
-          
+          <div class="form-row"><label>Bahan-bahan</label><div id="ingredientsContainer"><div class="dynamic-ingredient" style="display:flex; gap:8px; margin-bottom:8px;"><input type="text" name="ingredient" placeholder="Bahan 1" style="flex:1;"><button type="button" class="remove-ingredient-btn" style="background:#a94442; color:white; border:none; padding:0 12px; border-radius:20px;">Hapus</button></div></div><button type="button" id="addIngredientBtn" class="btn-submit" style="background:var(--brown-medium); padding:0.5rem; margin-top:0;">+ Tambah Bahan</button></div>
+          <div class="form-row"><label>Langkah-langkah</label><div id="stepsContainer"><div class="dynamic-step" style="display:flex; gap:8px; margin-bottom:8px;"><input type="text" name="step" placeholder="Langkah 1" style="flex:1;"><button type="button" class="remove-step-btn" style="background:#a94442; color:white; border:none; padding:0 12px; border-radius:20px;">Hapus</button></div></div><button type="button" id="addStepBtn" class="btn-submit" style="background:var(--brown-medium); padding:0.5rem; margin-top:0;">+ Tambah Langkah</button></div>
           <button type="submit" class="btn-submit">Simpan Resep</button>
         </div>
       </form>
@@ -553,32 +527,28 @@ function renderTambahResep() {
 
 function renderProfil() {
   if(!currentUser) return `<div class="not-found">Login untuk melihat profil.</div>`;
+  if(currentUser.role_type === 'ADMIN') {
+    return `<div class="not-found">Fitur Profil tidak tersedia untuk Admin. Gunakan Dashboard Admin.</div>`;
+  }
   return `<div class="page-header"><h2>Profil ${currentUser.username}</h2></div>
-    <div class="profile-stats"><span>Role: ${currentUser.role_type === 'ADMIN' ? 'Admin' : 'User Biasa'}</span></div>
+    <div class="profile-stats"><span>Role: User Biasa</span></div>
     <h3>Resep yang Anda unggah:</h3>
     <div class="recipes-grid">${renderRecipes(getUserUploadedRecipes(), true)}</div>`;
 }
 
-// ========== DASHBOARD ADMIN YANG DIPERBAIKI (seperti profil user) ==========
 function renderAdminDashboard() {
   if (!currentUser || currentUser.role_type !== 'ADMIN') {
     return `<div class="not-found">Akses ditolak.</div>`;
   }
-
   const allRecipes = getAllRecipes();
   const totalRecipes = allRecipes.length;
-
   let totalComments = 0;
-  for (let recipe of allRecipes) {
-    totalComments += getComments(recipe.id).length;
-  }
-
+  for (let recipe of allRecipes) totalComments += getComments(recipe.id).length;
   return `
     <div class="page-header">
       <h2>Dashboard Admin</h2>
       <p style="color: var(--brown-dark); margin-top: 0.5rem;">Selamat datang, <strong>${currentUser.username}</strong> (Administrator)</p>
     </div>
-
     <div class="profile-stats" style="display: flex; gap: 1.5rem; justify-content: space-around; flex-wrap: wrap;">
       <div style="background: var(--green-pale); padding: 0.8rem 1.5rem; border-radius: 2rem; text-align: center;">
         <div style="font-size: 1.8rem; font-weight: bold;">${totalRecipes}</div>
@@ -589,15 +559,17 @@ function renderAdminDashboard() {
         <div style="font-size: 0.8rem;">Total Komentar</div>
       </div>
     </div>
-
-    <h3 style="margin-top: 2rem;">📋 Manajemen Semua Resep</h3>
-    <div class="recipes-grid">
-      ${renderRecipes(allRecipes, true)}
+    <div style="display: flex; justify-content: center; margin: 1.5rem 0;">
+      <button id="fullHistoryBtn" class="btn-submit" style="background: var(--brown-dark); padding: 0.8rem 2rem; font-size: 1rem; display: inline-flex; align-items: center; gap: 10px;">
+        <i class="fas fa-history"></i> 📜 Lihat Seluruh History Komentar (Lengkap dengan Tanggal Resep)
+      </button>
     </div>
+    <h3 style="margin-top: 1rem;">📋 Manajemen Semua Resep</h3>
+    <div class="recipes-grid">${renderRecipes(allRecipes, true)}</div>
   `;
 }
 
-// ---------- MODAL DETAIL RESEP ----------
+// ========== MODAL DETAIL RESEP DENGAN TOMBOL TERANG ==========
 let currentModalRecipe = null;
 let selectedRating = 0;
 async function openModal(recipe) {
@@ -605,11 +577,11 @@ async function openModal(recipe) {
   const modal = document.getElementById('recipeModal');
   await fetchCommentsFromAPI(recipe.id);
   const avgRating = getRecipeRating(recipe.id);
-  const userRating = getUserRating(recipe.id);
   const userCommentText = getUserCommentText(recipe.id);
   const imgSource = recipe.imageUrl || placeholderImage;
+  
   let modalHTML = `
-    <button class="close-modal" id="closeModalBtn">&times;</button>
+    <button class="close-modal" id="closeModalBtn" style="font-size: 28px; background: #f0e6d8; color: #5c3e2b; border: 1px solid #c7a47b; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;">&times;</button>
     <img class="modal-img" src="${imgSource}" alt="${recipe.name}" onerror="this.src='${placeholderImage}'">
     <h2 style="color: var(--brown-dark); margin-bottom: 0.5rem;">${recipe.name}</h2>
     <div style="margin-bottom: 0.8rem;">
@@ -643,22 +615,26 @@ async function openModal(recipe) {
       <button id="submitRatingBtn" class="btn-submit" style="margin-top:12px;">Kirim Rating & Komentar</button>
     </div>
   `;
+  
+  const backButtonHTML = `<div style="text-align: center; margin-top: 1.5rem;"><button id="backFromModalBtn" class="btn-submit" style="background: #e0c8a8; color: #3b2c1e; border: none; padding: 0.5rem 1.5rem; font-size: 1rem; border-radius: 2rem; cursor: pointer; font-weight: 600;">Kembali</button></div>`;
+  
   const modalContent = document.querySelector('#recipeModal .modal-content');
-  modalContent.innerHTML = modalHTML + commentsHTML + `<div id="ratingFormContainer">${ratingFormHTML}</div>`;
-  document.getElementById('closeModalBtn').onclick = () => { modal.style.display = 'none'; document.body.style.overflow = ''; };
+  modalContent.innerHTML = modalHTML + commentsHTML + `<div id="ratingFormContainer">${ratingFormHTML}</div>` + backButtonHTML;
+  
+  const closeModal = () => { modal.style.display = 'none'; document.body.style.overflow = ''; };
+  const closeBtn = document.getElementById('closeModalBtn');
+  const backBtn = document.getElementById('backFromModalBtn');
+  if (closeBtn) closeBtn.onclick = closeModal;
+  if (backBtn) backBtn.onclick = closeModal;
+  
   if(currentUser) {
     const stars = document.querySelectorAll('#starRatingInputModal i');
     const existingRating = getUserRating(recipe.id);
-    if(existingRating) {
-      selectedRating = existingRating;
-      stars.forEach(star => { if(parseInt(star.getAttribute('data-rating')) <= existingRating) { star.classList.remove('far'); star.classList.add('fas','selected'); } });
-    } else selectedRating = 0;
+    if(existingRating) { selectedRating = existingRating; stars.forEach(star => { if(parseInt(star.getAttribute('data-rating')) <= existingRating) { star.classList.remove('far'); star.classList.add('fas','selected'); } }); }
+    else selectedRating = 0;
     stars.forEach(star => star.onclick = () => {
       selectedRating = parseInt(star.getAttribute('data-rating'));
-      stars.forEach(s => {
-        if(parseInt(s.getAttribute('data-rating')) <= selectedRating) { s.classList.remove('far'); s.classList.add('fas','selected'); }
-        else { s.classList.remove('fas','selected'); s.classList.add('far'); }
-      });
+      stars.forEach(s => { if(parseInt(s.getAttribute('data-rating')) <= selectedRating) { s.classList.remove('far'); s.classList.add('fas','selected'); } else { s.classList.remove('fas','selected'); s.classList.add('far'); } });
     });
     document.getElementById('submitRatingBtn').onclick = async () => {
       if(!currentUser) return showToast('Login dulu', 'error');
@@ -668,10 +644,7 @@ async function openModal(recipe) {
       try {
         await submitComment(recipe.id, name, comment, selectedRating);
         await openModal(recipe);
-      } catch (error) {
-        console.error(error);
-        showToast(error.message || 'Gagal menyimpan komentar', 'error');
-      }
+      } catch (error) { console.error(error); showToast(error.message || 'Gagal menyimpan komentar', 'error'); }
     };
   }
   document.querySelectorAll('.delete-comment-btn').forEach(btn => {
@@ -679,13 +652,8 @@ async function openModal(recipe) {
       e.stopPropagation();
       const recipeId = parseInt(btn.getAttribute('data-recipe'));
       const commentId = parseInt(btn.getAttribute('data-comment-id'));
-      try {
-        await deleteCommentFromAPI(commentId, recipeId);
-        await openModal(recipe);
-      } catch (error) {
-        console.error(error);
-        showToast(error.message || 'Gagal menghapus komentar', 'error');
-      }
+      try { await deleteCommentFromAPI(commentId, recipeId); await openModal(recipe); }
+      catch (error) { console.error(error); showToast(error.message || 'Gagal menghapus komentar', 'error'); }
     };
   });
   modal.style.display = 'flex';
@@ -709,10 +677,7 @@ function attachFormSubmit() {
   const addStepBtn = document.getElementById('addStepBtn');
   if(addIngredientBtn) addIngredientBtn.onclick = () => addIngredientField();
   if(addStepBtn) addStepBtn.onclick = () => addStepField();
-  
-  // Inisialisasi nomor urut dan tombol hapus yang sudah ada
   initDynamicForm();
-  
   form.onsubmit = async (e) => {
     e.preventDefault();
     const name = document.getElementById('recipeName').value.trim();
@@ -723,26 +688,16 @@ function attachFormSubmit() {
     const stepInputs = document.querySelectorAll('#stepsContainer input[name="step"]');
     const steps = Array.from(stepInputs).map(inp => inp.value.trim()).filter(v => v !== "");
     if(steps.length === 0) return showToast('Minimal satu langkah', 'error');
-    
     const fileInput = document.getElementById('recipeImageFile');
     let imageBase64 = null;
     if(fileInput.files.length > 0) {
       const file = fileInput.files[0];
-      imageBase64 = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.readAsDataURL(file);
-      });
+      imageBase64 = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(file); });
     }
     const success = await addNewRecipe({
-      name,
-      category: document.getElementById('recipeCategory').value,
-      region: "Tidak disebutkan",
-      description: document.getElementById('recipeDesc').value.trim() || "Resep lezat",
-      time: "30 menit",
-      difficulty: "Sedang",
-      ingredients: ingredients,
-      steps: steps
+      name, category: document.getElementById('recipeCategory').value, region: "Tidak disebutkan",
+      description: document.getElementById('recipeDesc').value.trim() || "Resep lezat", time: "30 menit", difficulty: "Sedang",
+      ingredients, steps
     }, imageBase64);
     if(success) { currentView = "home"; renderCurrentView(); highlightNav(); }
   };
@@ -750,11 +705,8 @@ function attachFormSubmit() {
   const previewContainer = document.getElementById('imagePreviewContainer');
   const previewImg = document.getElementById('imagePreview');
   if(fileInput) fileInput.onchange = () => {
-    if(fileInput.files.length) {
-      const reader = new FileReader();
-      reader.onload = (e) => { previewImg.src = e.target.result; previewContainer.style.display = 'block'; };
-      reader.readAsDataURL(fileInput.files[0]);
-    } else previewContainer.style.display = 'none';
+    if(fileInput.files.length) { const reader = new FileReader(); reader.onload = (e) => { previewImg.src = e.target.result; previewContainer.style.display = 'block'; }; reader.readAsDataURL(fileInput.files[0]); }
+    else previewContainer.style.display = 'none';
   };
 }
 
@@ -768,22 +720,24 @@ function renderCurrentView() {
   else if(currentView === 'profil') main.innerHTML = renderProfil();
   else if(currentView === 'admin') main.innerHTML = renderAdminDashboard();
   attachCardEvents();
-  
-  if(currentView === 'home') {
-    initSlider();
-  } else {
-    stopSliderInterval();
-  }
-  
+  if(currentView === 'home') { initSlider(); } else { stopSliderInterval(); }
   if(currentView === 'kategori') attachCategoryChips();
   if(currentView === 'tambah') attachFormSubmit();
+  if(currentView === 'admin') {
+    const historyBtn = document.getElementById('fullHistoryBtn');
+    if(historyBtn) historyBtn.onclick = () => openFullCommentHistoryModal();
+  }
 }
 
 function setupNav() {
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const view = e.currentTarget.getAttribute('data-view');
-      if((view === 'tambah' || view === 'favorite' || view === 'profil') && !currentUser) {
+      if(view === 'profil' && currentUser && currentUser.role_type === 'ADMIN') {
+        showToast('Fitur Profil tidak tersedia untuk Admin.', 'error');
+        return;
+      }
+      if((view === 'tambah' || view === 'favorite') && !currentUser) {
         showToast('Login dulu', 'error'); return;
       }
       if(view === 'admin' && (!currentUser || currentUser.role_type !== 'ADMIN')) {
@@ -803,7 +757,7 @@ function highlightNav() {
   });
 }
 
-// ---------- AUTH MODAL (LOGIN/REGISTER) ----------
+// ---------- AUTH MODAL ----------
 function showAuthModal(registerMode = false) {
   const modal = document.getElementById('authModal');
   document.getElementById('authTitle').innerText = registerMode ? "Daftar" : "Login";
@@ -822,55 +776,55 @@ function showAuthModal(registerMode = false) {
     const password = document.getElementById('authPassword').value;
     if(registerMode) {
       const username = document.getElementById('authUsername').value.trim();
-      if(!username || !email || password.length < 8) {
-        document.getElementById('authError').innerText = "Isi semua, password min 8 karakter";
-        document.getElementById('authError').style.display = 'block'; return;
-      }
+      if(!username || !email || password.length < 8) { document.getElementById('authError').innerText = "Isi semua, password min 8 karakter"; document.getElementById('authError').style.display = 'block'; return; }
       try {
-        const response = await fetch(`${API_BASE_URL}/auth/register`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, email, password, role_type: "USER" })
-        });
+        const response = await fetch(`${API_BASE_URL}/auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, email, password, role_type: "USER" }) });
         if(response.ok) { alert("Registrasi berhasil! Silakan login."); showAuthModal(false); }
         else { document.getElementById('authError').innerText = "Email sudah terdaftar"; document.getElementById('authError').style.display = 'block'; }
       } catch(e) { console.error(e); }
     } else {
       try {
         const response = await fetch(`${API_BASE_URL}/auth/login?email=${email}&password=${password}`, { method: 'POST' });
-        if(response.ok) {
-          const userData = await response.json();
-          currentUser = userData;
-          saveSession();
-          updateUIAfterAuth();
-          closeAuthModal();
-          renderCurrentView();
-          showToast('Login Berhasil!', 'success');
-        } else {
-          document.getElementById('authError').innerText = "Email atau password salah";
-          document.getElementById('authError').style.display = 'block';
-        }
+        if(response.ok) { const userData = await response.json(); currentUser = userData; saveSession(); updateUIAfterAuth(); closeAuthModal(); renderCurrentView(); showToast('Login Berhasil!', 'success'); }
+        else { document.getElementById('authError').innerText = "Email atau password salah"; document.getElementById('authError').style.display = 'block'; }
       } catch(e) { console.error(e); }
     }
   };
 }
 function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+
 function updateUIAfterAuth() {
-  const g = document.getElementById('userGreeting'), a = document.getElementById('authBtn'), ad = document.getElementById('adminDashboardBtn');
+  const g = document.getElementById('userGreeting');
+  const a = document.getElementById('authBtn');
+  const ad = document.getElementById('adminDashboardBtn');
+  const profilBtn = document.querySelector('.nav-btn[data-view="profil"]');
   if(currentUser) {
     g.innerText = `Halo, ${currentUser.username}`;
-    a.innerText = "Logout"; a.onclick = () => logoutWithConfirm();
+    a.innerText = "Logout";
+    a.onclick = () => logoutWithConfirm();
     ad.style.display = currentUser.role_type === 'ADMIN' ? 'inline-flex' : 'none';
+    if(profilBtn) profilBtn.style.display = currentUser.role_type === 'ADMIN' ? 'none' : 'inline-flex';
+    if(currentUser.role_type === 'ADMIN' && currentView === 'profil') {
+      currentView = 'admin';
+      renderCurrentView();
+      highlightNav();
+    }
   } else {
-    g.innerText = ""; a.innerText = "Login"; a.onclick = () => showAuthModal(false);
+    g.innerText = "";
+    a.innerText = "Login";
+    a.onclick = () => showAuthModal(false);
     ad.style.display = 'none';
+    if(profilBtn) profilBtn.style.display = 'inline-flex';
   }
 }
+
 function modalInit() {
   const modal = document.getElementById('recipeModal');
   window.onclick = (e) => { if(e.target === modal) { modal.style.display = 'none'; document.body.style.overflow = ''; } };
   document.getElementById('closeAuthModal').onclick = () => closeAuthModal();
   window.addEventListener('click', (e) => { if(e.target === document.getElementById('authModal')) closeAuthModal(); });
 }
+
 // ---------- INIT ----------
 loadAllData();
 setupNav();
