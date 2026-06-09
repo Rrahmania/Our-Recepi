@@ -11,20 +11,30 @@
 <body>
 <div class="container">
   <div class="navbar">
-    <div class="navbar-logo">
-      <img src="jCAR.png" alt="Logo Rasa Nusantara">
-    </div>
+  <div class="navbar-logo">
+    <img src="jCAR.png" alt="Logo Rasa Nusantara">
+  </div>
+  
+  <!-- Tombol burger (hanya tampil di mobile) -->
+  <button class="burger-btn" id="burgerBtn">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <!-- Menu navigasi dan user area (akan disembunyikan di mobile) -->
+  <div class="nav-links" id="navLinks">
     <button class="nav-btn active" data-view="home">Beranda</button>
     <button class="nav-btn" data-view="kategori">Kategori</button>
     <button class="nav-btn" data-view="favorite">Favorite</button>
     <button class="nav-btn" data-view="tambah">Tambah Resep</button>
     <button class="nav-btn" data-view="profil">Profil</button>
     <button id="adminDashboardBtn" class="nav-btn" style="display:none;" data-view="admin">Dashboard Admin</button>
+    
     <div class="user-area" id="userArea">
       <span id="userGreeting" class="user-greeting"></span>
       <button id="authBtn" class="btn-auth">Login</button>
     </div>
   </div>
+</div>
   <div id="mainContent"></div>
 </div>
 <footer>By Kelompok Alpukat Kocok</footer>
@@ -77,3 +87,4 @@
 <script src="script.js"></script>
 </body>
 </html>
+
