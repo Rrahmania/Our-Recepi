@@ -1,4 +1,3 @@
-
 // ---------- KONFIGURASI API BACKEND ----------
 const API_BASE_URL = 'https://backendrecepi.onrender.com/api';
 let apiRecipes = [];
@@ -122,49 +121,8 @@ function getUserUploadedRecipes() {
   return currentUser ? apiRecipes.filter(r => r.author && r.author.email === currentUser.email) : [];
 }
 
-// ---------- RATING & COMMENTS ----------
-async function submitComment(recipeId, userName, commentText, ratingValue) {
-  if (!currentUser) throw new Error('Login dulu');
-  const payload = {
-    recipeId,
-    accountId: currentUser.id,
-    text: commentText.trim() || "(Tanpa komentar)",
-    rating: ratingValue
-  };
-  const response = await fetch(`${API_BASE_URL}/comments`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || 'Gagal menyimpan komentar');
-  }
-  await fetchCommentsFromAPI(recipeId);
-}
-
-function getRecipeRating(recipeId) {
-  const comments = getComments(recipeId);
-  if (!comments.length) return 0;
-  const sum = comments.reduce((a, c) => a + c.rating, 0);
-  return sum / comments.length;
-}
-
-function getComments(recipeId) { return apiComments[recipeId.toString()] || []; }
-
-function getUserRating(recipeId) {
-  if (!currentUser) return null;
-  const comments = getComments(recipeId);
-  const userComment = comments.find(c => c.userId === currentUser.email);
-  return userComment ? userComment.rating : null;
-}
-
-function getUserCommentText(recipeId) {
-  if (!currentUser) return "";
-  const comments = getComments(recipeId);
-  const userComment = comments.find(c => c.userId === currentUser.email);
-  return userComment ? userComment.text : "";
-}
+// ---------- RATING & COMMENTS (duplikat dihapus) ----------
+// sudah didefinisikan di atas
 
 // ---------- KONFIRMASI & TOAST ----------
 function showConfirm(message, onYes, onNo) {
@@ -359,11 +317,6 @@ function generateSliderHTML() {
         region: "Betawi",
         imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop",
       },
-      {
-        name: "Bakso",
-        region: "Jawa Timur",
-        imageUrl: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxMTEhUSExMWFhUXFRUWFxgXFxUXFxkVFxUWFxUVFRgYHSggGB0lHRYVIjEhJSkrLi4uFx8zODMtNygtLisBCgoKDg0OGxAQGzAlICYtLS0tLS0tLS0vLSstLS0tLS0rLS0tLS0tLS8tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIALcBFAMBIgACEQEDEQH/xAAcAAABBQEBAQAAAAAAAAAAAAAEAAECAwUGBwj/xABEEAABAwIEAwQHBQUHAwUAAAABAAIRAyEEEjFBBVFhBiJxgRMykaGxwfBCUpLR4QcjcoKyFBUzYnOi8UNT0iSDk6Oz/8QAGgEAAwEBAQEAAAAAAAAAAAAAAAECAwQFBv/EADERAAICAQMCAwUHBQAAAAAAAAABAhEDEiExBEEiUfATMmGRwRRxgaGx0eEFQkNS8f/aAAwDAQACEQMRAD8A9ZCcFJOmMdIBRzJ5SbAlCUKTQoOBRYDwkoBykCmBJJKU4QA0J0lEIAkoEqagQgAeu5YnEqy28QFhcSppjRDgeMDHFrvVdYrzj9oXZl+Gqmq0TReZDhoCdjyXc0wtTDYtpYadVoew2IddY5Iajs6bqZYHtw+T59cmK9b43+zKhVl+Fq+jJ+w+7PI6hcbj/wBn3EKX/Q9IOdNwcPYYPuWDi0enHqcc+H8zkoVgdZaVTgGKbY4at/8AG/5BTodmMY8w3C1j/I4f1QkWpxj3MtpR2GBJAAJJsANSeQXU8J/ZfjakGoGUG7l5l34W/mvRuzPY7C4Qhzf31UfbdED+EaBHs3IX2/Hh3u38Cz9nvAXYbD5qgio+5HIHZdKSpNJKsygdSuqEVFUeFmyyyzc5cspykpxSKsdU8lQ+sOaHNLkzUWyzKVIBCemB0KXpuqSyRfcehhhCaFUzEW7ytDwdCrsmmOGqSjmTpiFCSSSABUz3QncYUWiSlYyNGneSr3BSCSnkCMqYcmyKNTqigHLAoCQpBSBTsCLVMBRLE7CmA8JlIpoTENCchOFJAA7mSgMXhZWsQq3U0DORr4UtOllWupq4UFBVeHBIpMy6Nct3sjKfESNz5JHhiTeHFJoq0Wf3ufvH2Kmrx07Fx8Ar2cNRFLAAbJaRWjNo16lQ3kDqtigyAp+iA2Q+JxIaE0qJuzVotgTzVVerGmqua7ug9PkuR7Vcf9A0hl3lcfV9QsUfvOjpsEss9KNjFYxjBNR4HmsTFds8M2wObyXmHEOLVKjnF5k+OizXV15vtMsvh+Z7sP6fiivG7/I9Uw/a/DgmJEndaVDj9J8Q4LxUVVbTxjgbEhSlmj7sjWXSYJHvtDFscI9iQcWmy8p4B2kc0hrjZek8OxoqNF7/ABXd0vWOcvZ5Nn+p5PWdC8Pijujco1Mwn2qxAYGp3o5o5eknZ5clTFmTqolJMkoAJurmaKLArAEihBOokpSmImCnVYKcFACczkmvuLKRcNSnZUDhYpWroCJPJOAoV6jWiXGJsNSSeTWi7j0CelSqO1/djrBf7PVb/u8AkOu4z6ob6zgNdSBprqnbWn1Wud1jKPa6JHhK89xvHS7EHLmgE5czie7zvoTEwLXhdBw7tTLe+QQ0d7Ygfe6jmuGP9QhrcZbLszrl0U1FNbnRlj+bG+1//im9Fze7yyge4T71TRxjXiWOBCd1Rd6akrTOR2tiz0bebvxv/NRNNnL3u/NDvrKo4hMNwzKzkfxOHwKWRvNw/mJ/qlBenS9MgNw3Jyd+IA/CFKCNWg/wm/sNveghXUhXQAaKjdD3T/mEewmx8lNwQ1OtNufNTfQy2Es6at/Dt5QgNijFVYXN8RxM2W3j8wBLhb7wu3z3b526rlMfUg+aRSVHXdn8eKlPIT3miPEbFeb/ALR8wqiVq4XHGm8OaYIWlxvBUuIUrOFOqNCfVPQ8lwdbgeTTKPZnf0GeOHJ4uGeP1HFMFqcd4DXwx/e03NH3h3mHqHCyyly1R7akpbp2hnCEoSIhWFlplBVD0yV33YziDi2JuFwVFhJgalendjuy9XKC4ZGm5c63kBusJwlKaUObJzzhHE9b2Ox4SMzy7YD3rSKfD0WsaGtFh7+qkQvfgmlufKTlb2K4STkJKiCsp5VQKkEDJlNCcBIoAUJwFHMovdAlAEcW8tY4jYfNY9HHgOsSCfYrO0eIrCkPRAZTao7VwFoa1sb7u2GgkyMOjhXVWOLw6mWmWvjUdWkj2rzusbbTidWGKrc0eLcTdQyva7vvcQXENcYEWFrNvoI96LdxZ9Sk9jiBULHAEaGQYI5ahczxDDVqlA04ipScHtP2ajYcIadnRFjuORlF8Kl9I5mlr2HK4HUGAfgVwR6vLGdvdPsdbwQcficNi6Ff0uYD1batA8DJstLC0K7HtrE02gXMvJtv6oIRfEuGnEOeGGoyq0ZZynI/dpdbSNwZHIxCjw3s1iajctd7abYuGnM887+q3xv4JzxbbO0dMc0a32DcViHtc2rTIDXxAbcZ4uA3aY+Pn1PDeIZxkeYeBfoYuD1XL8KxDDWZhqIIbRaS7McxkDK3Mec38lLszjn1GVHVGkOa54eYgZmugtHhEeSzw5JYZ6k9u5nmxLJE6GvjIlCO4mLz7kFxKjUiW94dPWAibjdYrMYxo75no3Xnqu/J1cquJ5nspcHRUOLh2xBGxRVPHA6FAYCvLRIFgLEAmdbI1uDDznDcjhDrGPIgWMp4+scuxbwtB8lL0icvMQQYmJt8tEDi8K8DMx08xafLmt49Sn2M3jYe2qi6eOMQbjquWw/F2zDvdqPELQpY5p0IW8csZcMhxN+nV3afJZHFuBMrAmlDH8vsO/8AE9RbmN1KnWRFOstORJuPB51jGPpPLHgtcNQfq46qNDiTmGQV6HxXhtPFMyvs8eo+LjoebTuPgbrgMZ2fqMc5pHebqNfAg7g7H9QoaaNNmrRucN7VNjK8xtDrtPtRFbhWAr3dh6cn7VIlh/2lcZU4Y8bKNHBVR6pc3wlQ4p8hGcou4ujrh2L4eQRFYTf1mkjwJU6XYfhwuRWd4vAH+2Fz1DD4r/uvWtg+DVXx6Sq9w5SYSWCHkafas3+7+Z0PD8JgsOf3NCmHcz33+0ytyjUc+5WXwvhLWRAW5SpwtoxUeEc85uTuTssCRTpKiCGVOnTIACYVcAh2K4FAyUpiUzio5kATCExlVxc2jTMPcMznROSmDd0G2YnutB3k3DSFdWrta0ucYa0FzidA0CST5Bctw7jsNfVcCH1HBxB1azSnT/lbE/5i47qZNLk0gu/qzfxFiQs/E4iGnwKzhxE1H+kBsJaBsZAmfdZJ+IBm/wBdV53UtdjfEi/DA1KXdPebI+Y/Jc07jpo4403OysqUw5wtIc3umPJq2+D4wCq6mLyC4eIiy5PtzgXuqZ9C2XDofmCNl5kIra/uPQhy0dljqRIa+gZi8E+sOh56LAxfaR4Jphjy+PVDXF34Ylc5gOMYjDNYdQ5jXFtwLibcvBF1O2j3aOjmHSq0yvj5cF+zr4mp2WoVGOxGLrD0RdTIY11nGO9ncDdvK/M9EVwHEVRh2Cu3I+s+qQJv3zUqgnkTy1XOYHG+nqhrnTq88obFo8SF0HE8cA7DTf8AfAC8QMjmk9fW96mbd00No6ms4OaC2dBfpC4P+6YxrmmzGFlQa94uNmjwcD7BzXX1uKZZIAGUQeR6fFc9V45Rq18sg/uz6ty12ZoAtpot1K26OXS0azXiHNLm26xMbjzHuRGHxTGsLWvFgHTMm+o8lnf2ClUeBkiR3iZcPYTqp0+DPo1PVa+k4GC0hgBkEZmiLEeKcYTatEOUeGGMxFTP3XAi9nBwm/rN2jy2VmIqOaCc2znCdyATflshMLw99O/rCXWuSADLTrcwYR1bLfN6rmkcpkQY9qzandMdx7HJio0aJ6OKOYAcpmV0VPg9AuYfREQbgu15BwOt/rZRxXAmhxLHZNg0jMLnQbx7Vs8qi6swWN0QwWMMgTK3KT5C548Kq0+8Yc3mwG3i3VEYbiQaYcYHVd+HNfJlKNHQ06kKzF0PSAOAl7dvvs+0w/EciORMg0a4cJBlG4arBXYtzP3XZS3hzHtDmwWuAIMbHx0S/udvJGYR2Sqaf2agdVZ0dI9M3zLmv8XP5LRyBCFNU9jKp8MA2CMpYMBFZU4TIsixkKyUyZAEpTqsOUpQA6SaUkwM9pVgKpaU5ckMsL1BzlS6oqzWQAHxwekFPD7Vaga7/SYDUqA9HBgYf9RZnGeGZiWtIbJFz57brVwrg7GCb5MO4gdatRon2UT7URxDA5iXixIA9k396ymrTNm9Kivx9fhRz4wrKbBTYLczck7k9VxvGOJOo4guZcCA4cxAzD63C6TG419N+VwBvHL3LleL4TMTeSZPtuuOaTNsex1HZLFsq1fSsMtNN3iDLZBGxF1qdp8G2tSE905mDxBe1pHsK89/ZtmZxBzATkNKqXDaW5YPQyY813nHMRNKBrIPmLhcPUJY1X4nTjuU0yGI4G1xkAeYjyBXnnazgBaS9gIvPUL114Ba2CbgEjxE6LC4zRaWkO0usFlcGmjeL1cni+Gx9Si8VGnvNO/vBG4K7g9p8BVpMfUNVtVjg40wyZtdrXaRIGpFtYWDxPhLS9wpmYIkct/r/hVcK4E+tOXK0AxLjF9hAkr0nDHlSbW5ySyyxyaTL+PccxWIpOqtaWYcPDHEETnd3gHwZaD7NpOiB7NekpvzCm890mA0nu7nTTRdr2b4fTwtZzm1i8ZctVtgwixggi5Bm52J5laGDq5mv9GMtN7nOE2kH7sD1eXmtVGEY6EjLXJu2a/C3QbjNIsdQN4EH4rYw+LBgC48p8hz6LB4ZLnZAYsI1iB8Z0RvDsKynUc8usLNG99bG+tvLqiKUdkTLc2KHhc38uqk+kwkFzQeROx5jlvdRzDYiPZ7TurswkbrRpPYz3OF7RcLxFPFMe17n0ZzNkmWEatga9HaxY6SdF/aMyMzbki3z+K6DiNMR4XCw+IEOeKWUWOY9bQB/V7QvM6iFT22R04aq2aNDGktzfQ528kDxnhLMW1ozZXtiN8w3byB5HZNiGw3KLSYhKk0tMzYLFTknsaShGS3KKXD62GbIuwRo4uIHMzfX4rW4fxAOiVWcY1zXBxsGmfZv7FiUGkvDW8/cvVwZZOKZySglsdnjasU21f+09tSb2Z6lX/63vPkFuBYP9nD6FSkbh1J7T5sIWpwytno0n/epU3fiYD813dyJK8afk/X1Ck6ZJUYiUXJ5ShICLQppkgUwJJKJToAy8yqqVE5KDxFRIoVWuhHYlDYrELPqYlIqje7OHNjK3XDUY/lq1p/qC6J7dei4rs3i8uNpEm1RlWl/N3arP8A83+1d1i2Wkaj4Ka5Lzf2vzX6bfQ5vtDhGPb3mgxp0XEHs9VrCQ8N+7MyQN5Gn6Fdz2ncW0XncNK5ns5xptam+mPsBpB5wAHfL2rmkvEODpDdmOzzqHpKjnsdUfDJaZytFyCY1JifALVxfAyWXqXPS3iqMPXLXSP0WrXqOeNfcuTL02u2bwzOI9V5JAaMxAAAGsQsjivZPF4q3p2YdpN4a6pUI5ata3yJU6mHqA+uY5Cw8+fmisFXqNNiR9clOLp1GWqasc8rqos5Xj/Y5vD6DDSe6o6o/I4uDQZyudLY27pEX1WJwmo8ZqbQNZuct+Wl9JXedvvS1m4YMYTDnudGzoaGm9hZztVy+IwRYR6QObYxdszHMW5LqlpUnRhG6tmBi3VMx9LYFwBEXLRNy4eNtZlejMrekptbTgOABEgHawAXneJqy43MC55LrMC40w0y0HKLM0Bk+5OXmUiXEqNeRWYc9srgGw5sXkAeajQrPqRWJgDclt+ZI6c0SzHuvHrTpMmRyI53XO4CXPdrdziQdgfsnrqhKwbOoPEnAlroJBABt0k6a6KQxzmvY4EuaSQQbX5Rt+qwTSc4yMoHOTMCIlF0cQcrgdQCQTpI2+uaTQjsHvy9Z87bA+1cNh8U4YioCe6Hlov9lriLrfc8uachLnkttyi/kLIPH8GqOeajKbb6gOEzuTzKyy43ONoqElF0yziNWYjT5/QV4MMzPIaBqXerEa6hBVg5gDXDw+7bXXQj5ofFsfVexhMNDDUaOdwMzhsLmPNc8MVy3RrKdIhg8QC15c+QXk6Xc0GAAOoHktfgVHWodTYdOaBw9DPTcQyHtkDkSNlr8Ia4UwHtyu3HIr0cS3RyylZ0WGMNceTXH3FFcDpFuGoNOraNIeym0FA12n0DwNXj0Y8and+BJ8lsU4AGU2ECJ2Fl0t7k/wCOvN/p/wBJTsmlO53MbpZdIKaZmME5US+NR804eE7Qh0wTymQA6dMkmBhVXLLxFVH13LIxRgpFoz8ZWWa+qrsfUQAdKkpBzS4APZ/iU3NqMHN7DmDfMS3+Zeo4LFsrUmVWGWVGBw8HDfqvNsEN10HZTG+gqHDOMU6rnPo/5ahl1Wl5mXt/mGwRw7Na1w091uvu7/v8yri/E2+k/sdeWl/dp1dWun1Q/wC6TpOkzouOZwqpgq4cfUzGY+6+x9kz5L0PtbwltQNq5ZdSOcdctwD4GCvPuM8Ze92QtkuAaPHczuubL4XuYxkdLTpTotbB4V0LC4HiiKbWuaXPAjkI0BJPPpJW3Rc9w9cRrDZA8zuolmikaqLYVVYxtnuAPKRPsQeJxYactNmd1twGidLnXwCuq4e2bKHOExsRzA8VVQZna1xaASNjGvNCy6uA00I1QQHO6SToPyVXEuE06zcrxI1BBgjwIRD2hhMDbQTedwhclRrXCk3MdWhxygcwCdt4WE4VuXGWx5t2l4NXwbw4/vaTpDXxoRfK8c/cbrHPamtJD4AiDlbBtobmy9cw2Br1m1GYsU8jmw1rLlrgbOnn5ry7jPBX08zXCX07GwgjQuHnfzWmOepbkN+Qbw/tm0Nc2m2o2oWnK8Na8AiIbeIBOq6RvGaZY2p3fSvaDlNMkkgkaiWk+HyXMdluA03kGo4xrlAiQvQsBwOgxsNphsmxyjUdditajwhWyqjw413mrUa1vdHdBIiBEECPlskzgzSTMtbaADNibEzfwHXktFmDbTJcGm7LjMRmbueYN9FbxNtQ0gaMC4dDhcnXXfzQmlyiXfYtdSbTbDWuygaAgT1cQZWdjXEQ5oIvoJNjzRnC8Q+qzvwwXB525Ik0hcNENiJOpM/E8lbuUdjPhmDxusTTY9sgk30INu7Y7jmsrhGErPqiocxOhJ5QurxGGpMA9Kb/AGWak+DRcq1gcRoKbesZvwiw8yVOjxclW6KqOGDGxYkXgEa39+qswtPMR7VCpB7rQdpJBkxB1P1qtLDsyNBiXuswcz+Q3W0efgJK9gijRzVWj7NLvH/UcIaPIFx8wtCpSB0JB5j5802Dw+RuWZMkuPNx1P1sArVoE5dl2BalQt9YZgdwJ9o/JQZVa4DK4ctfroizzQOYTt5gJUTZN7nDUAjaDB8eSqNc5gIJBEiB47/WqIdTBjKI8CQL225fko0YJJ2Fh8PzUsZDFFwgwAJE843FkRKc6piqiqEx4SUSUlYjmq7ll4zdaFZZ2KSNDnsc66Hoaq/iAgqnAg5lIzawQhG4jDCowsdOxBFnNcDLXNOxBuCqcJT3RpsqGpNO0a3Z/jJq/wDp65ArtEg6NqsH/UZ10zN2PQhcz2t7P1GvzUGSXEfP9VHiEGNZBDmuBhzXDRzXDQ/Rst7hXHw9opYogGYbWFmuO2f/ALb/AHHbWFjkjqVGjip+KHPdft+30PO8Lx14e5r2lrmd124zXA+C6jg3aem9jSTB36dfBc32+7JYilVfWY0vpvvmbIGn2xt8Fx7a/oRDCc32rQeoMrili7dwjM95pV81wRHyVYpNzZj8V5V2Z7ZOpuYyoe6XBp3aAYEibt57jwXf4rHBpiQZg28LLGcZQ5NItS4Nl9ds5pEDnyT+k1HxK5vEYgOkA+M/LmnNVwaDc6D/AJUvJKilBHT+kAFxpyWF2i4c2oC7UlunOIt7h7EXw0kXlPi6LmkEAu73SMpmfNadO3KW5nlSSORoMEAgw72CByXUYXFyxs7G4g3POyDfg2F5aBlcQSDFijqNEspy+HkyAAYJMHprbZdWlx3MlK9irF8ROVmWc+aAdoO07/or6VYMaKju8Ys3qCQXHp9brH4RUpOkEhrqb9CTJB8bn9FtsYxjc79JhjbknkJ5BZxbk77FyqKLuHtLrx8gPFEVq0NJZFpmoR3RzyDfx+KHbiQdXD+HYeSsfh21WguLnDSBYA+AXU5JKjmoCa9wAqFvrG7iC52UfBFVeJju5RJkNAnUnUgDTT3FXN4fIyjMG7y4knpfQJYeixju4A+oLf5GDlPP3lRDFJLdlRTfARRpZe/UuTo0XJOwAWng8OQc7/XIjo1v3R8yo4TCwczjmed+Q5NGwRkLoSpA2lsiSZySi4qiBByExNG/UmFc4pyB9rSIPt0SYynPlAGhNhppOvnb2qwCB9c/+UiJ7xPh4AyExE2+tf0ClATaN1FxTqMqxCSSlJMDlqhQGJR7kFimoNDA4jTVOBZdGYpiWAoXUjNbCiysrVICamEBxHEhoJOiYA2LrgDMbDl8gsT+8XB+bY2LToW8ioYvEl5k+Slg8NmudFAzrOB8XqNZ+7OenvSqaDo12rfC46ILjXZfBYsk0n/2Su77D/8ADceTbx+E+SjgWRcWRlQtcMrgCNwRIKHBMrWpe98+/wDPrc8+4r2Dx2HJLqWYTZ9MhzfHmPMLa4I94b+8YbdBP5eYXU4apUpf4NZ7B9wnOzwDXzlH8JCuPEyf8bDUqnN1Mmm78Jkf7ljkwakXGl7r+n8fmc9WxgbceS1MBig+mJgnQ+B0PRGl+Edr6an0fTzj2sn4p8PhcKDLa+HnqfRn2Fcz6aRdy8hqWLLNYgaK/iBL6ZqU3RVYJEfaG7SEQ3BNOhou/wDdH5K9uFcNDSb4OBUw6acZWRKdrgF4e+o5jX1RlAuR13nksjHV316no6TT6OQXOixIMwzl4rpKpaGZalWkBF5e0eeqGbi6DbHEsPRku/oBXY4WqZgoSfCMB/AqoqekytIYcwDnXtcQQPjyRT6hrtaM+Ug+pDTcatO/0FrHiFH7NOrU/lyD2vIKf+31D6tOnT5EzUd8AB70LHFKkaSTl723ryAndnar2ACoWyQXOAuOYm0+MLXoYinSGRpNR1u6zvR/E8mAg3U3P/xHuf0Jhv4WwPai6bQxuwGw0v0VQxqPBPhSrn168iqtiHvOV3dB+ww3P8TtT5Qtrh+HyDQDoNAg8FTaDm+0dTv+i0ab1oiJSb27BLVNVscpZlRBIFM4JiUxP18kAV6m20H9UmXNpj6Oik4aD2nbRM85fOfcDe56BQUNUdFp05+e/kEmqLRJJ1E2VgKpIRFxUQk8wotKoRIBJKUyAOZeELWCNe1DvYkWjJq0bq7D0YRQoqGNqtpsJKBguMxYYJJ/VctjcWXmSlxHGF5k6bBBUwXGAobsotw9EvdA810mBw4AhDcNwwaAI8VqDRNIRAsjRUXm6JJlRITAjnSNZMWhDPp3lABfpAlnQFaoRaLquniTpN/r6lAjTFJh1a0/yhTbhqf3GfhCBZXKJpV+iVFapeYW2k37rfYFexAnFkaMJ8wFWcfV+yxo8ST+SBNtmyxqm+q1vrOA+PkFgA4h+ryByaA34X960cDwzeL/AFrKQjSo4jN6o8z+SPHDw+5Jzc/0VWEw0DRatGnHRMlgRoOZrpzGiup1VoMTVcC03Fk6EU06ivY9C+hLdfrdX0yIQBYHj628UqvK99L9UzBGsCfbPL4JMaZ10+RtbToUmxom4QJtN+UX8x03VNR8nLINjP6fRUcRWcBIEmbDQQJkk67DSPWCpbTLdbiSYjpIA+CaQi4O2kc9U9NxOv5IWo8k2AAEAi4iTrAHz+amHXA08Dtz+IVCJiqNoP58iCne47gaXhDVa+nUx1jxOoTvqy0nKNxrz0tHVAETiACRA8zdJB5jsI8995STGMaapcBMblOkpKK8W8U2lxXI8SrOeS53kOSSSllGI+kXGAtPAYLL4p0kIDVo04ClUckkmAwKmxJJAEarYVb2pJIADrNmw8T+v5IQ04NkkkhllNxBvutTCt3SSTEGilKvp4UJJIEGUMMEfSopJIEG02IhoTpIEyxqtYUkkxE5mxVRpAG3l4xqkkhgijNlkHQOaJNyZi/tjVTBgTuG/Lr4JJKEMGaDIO5+hH1uo1gYkHQj61SSWgiY3PKf+UzgDPmJlJJAikUSLwNZ8yVMYcm1uXygbjbdOkmBUaIGtkkkkAf/2Q==",
-      }
     ];
   
     let slidesHTML = '';
@@ -605,13 +558,43 @@ function renderProfil() {
     <h3>Resep yang Anda unggah:</h3>
     <div class="recipes-grid">${renderRecipes(getUserUploadedRecipes(), true)}</div>`;
 }
+
+// ========== DASHBOARD ADMIN YANG DIPERBAIKI (seperti profil user) ==========
 function renderAdminDashboard() {
-  if(!currentUser || currentUser.role_type !== 'ADMIN') return `<div class="not-found">Akses ditolak.</div>`;
+  if (!currentUser || currentUser.role_type !== 'ADMIN') {
+    return `<div class="not-found">Akses ditolak.</div>`;
+  }
+
   const allRecipes = getAllRecipes();
-  return `<div class="page-header"><h2>Dashboard Admin</h2></div>
-    <div class="admin-dashboard">
-      <div class="admin-section"><h3>Semua Resep</h3><div class="recipes-grid">${renderRecipes(allRecipes, true)}</div></div>
-    </div>`;
+  const totalRecipes = allRecipes.length;
+
+  let totalComments = 0;
+  for (let recipe of allRecipes) {
+    totalComments += getComments(recipe.id).length;
+  }
+
+  return `
+    <div class="page-header">
+      <h2>Dashboard Admin</h2>
+      <p style="color: var(--brown-dark); margin-top: 0.5rem;">Selamat datang, <strong>${currentUser.username}</strong> (Administrator)</p>
+    </div>
+
+    <div class="profile-stats" style="display: flex; gap: 1.5rem; justify-content: space-around; flex-wrap: wrap;">
+      <div style="background: var(--green-pale); padding: 0.8rem 1.5rem; border-radius: 2rem; text-align: center;">
+        <div style="font-size: 1.8rem; font-weight: bold;">${totalRecipes}</div>
+        <div style="font-size: 0.8rem;">Total Resep</div>
+      </div>
+      <div style="background: var(--green-pale); padding: 0.8rem 1.5rem; border-radius: 2rem; text-align: center;">
+        <div style="font-size: 1.8rem; font-weight: bold;">${totalComments}</div>
+        <div style="font-size: 0.8rem;">Total Komentar</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 2rem;">📋 Manajemen Semua Resep</h3>
+    <div class="recipes-grid">
+      ${renderRecipes(allRecipes, true)}
+    </div>
+  `;
 }
 
 // ---------- MODAL DETAIL RESEP ----------
