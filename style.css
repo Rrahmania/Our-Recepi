@@ -468,7 +468,7 @@ textarea:focus {
   background: #8b3c3c;
 }
 
-/* ========== MODAL UMUM (termasuk perbaikan tombol close) ========== */
+/* ========== MODAL UMUM ========== */
 .modal {
   display: none;
   position: fixed;
@@ -496,7 +496,6 @@ textarea:focus {
   border: 1px solid var(--brown-light);
 }
 
-/* PERBAIKAN TOMBOL CLOSE (X) - TIDAK BENING */
 .close-modal {
   position: absolute;
   right: 1rem;
@@ -525,7 +524,6 @@ textarea:focus {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Penyesuaian tambahan untuk modal dengan latar gelap */
 .modal .close-modal {
   background: rgba(247, 237, 224, 0.85);
   color: #5c3e2b;
