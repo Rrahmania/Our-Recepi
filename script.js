@@ -3,12 +3,15 @@ const API_BASE_URL = 'https://backendrecepi.onrender.com/api';
 let apiRecipes = [];
 
 const placeholderImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23d8b48c'/%3E%3Ctext x='50' y='55' font-size='14' text-anchor='middle' fill='%235c3e2b'%3E🍽️%3C/text%3E%3C/svg%3E";
-const categoriesList = ["Daging", "Ayam", "Ikan/Seafood", "Sayur", "Nasi", "Jajanan"];
+const categoriesList = ["Semua Resep", "Daging", "Ayam", "Ikan/Seafood", "Sayur", "Nasi", "Jajanan"];
 
 // ---------- STORAGE LOKAL (Sesi, Favorit) ----------
 let currentUser = null;
 let favorites = new Set();
 let apiComments = {};
+
+// State untuk pencarian di halaman kategori
+let searchQueryKategori = "";
 
 function loadAllData() {
   const storedSession = localStorage.getItem("nusantara_session");
@@ -32,24 +35,19 @@ async function fetchCommentsFromAPI(recipeId) {
   try {
     const response = await fetch(`${API_BASE_URL}/comments?recipeId=${recipeId}`);
     if (!response.ok) {
-      const message = `Gagal memuat komentar (status ${response.status})`;
-      console.error(message);
-      showToast(message, 'error');
+      console.error(`Gagal memuat komentar (status ${response.status})`);
       apiComments[rid] = apiComments[rid] || [];
       return apiComments[rid];
     }
-
     apiComments[rid] = await response.json();
     return apiComments[rid];
   } catch (error) {
     console.error("Gagal mengambil komentar:", error);
-    showToast('Tidak bisa memuat komentar. Coba lagi.', 'error');
     apiComments[rid] = apiComments[rid] || [];
     return apiComments[rid];
   }
 }
 
-// 🔥 FUNGSI BARU: Memuat komentar untuk semua resep sekaligus (agar rating langsung muncul di card)
 async function loadAllCommentsForRecipes() {
   const promises = apiRecipes.map(recipe => fetchCommentsFromAPI(recipe.id));
   await Promise.all(promises);
@@ -96,11 +94,7 @@ async function submitComment(recipeId, userName, commentText, ratingValue) {
     throw new Error(errorText || 'Gagal menyimpan komentar');
   }
   await fetchCommentsFromAPI(recipeId);
-  
-  // 🔄 Refresh seluruh tampilan agar rating di card terbaru
   renderCurrentView();
-  
-  // Jika modal sedang terbuka untuk resep yang sama, buka ulang agar datanya sinkron
   if (currentModalRecipe && currentModalRecipe.id === recipeId) {
     await openModal(currentModalRecipe);
   }
@@ -116,7 +110,6 @@ async function deleteCommentFromAPI(commentId, recipeId) {
     throw new Error(errorText || 'Gagal menghapus komentar');
   }
   await fetchCommentsFromAPI(recipeId);
-  // Tidak perlu render di sini, karena sudah di-handle oleh deleteCommentWithConfirm
 }
 
 // ---------- API RECIPES ----------
@@ -125,7 +118,6 @@ async function fetchRecipesFromAPI() {
     const response = await fetch(`${API_BASE_URL}/recipes`);
     if (response.ok) {
       apiRecipes = await response.json();
-      // 🔥 LOAD SEMUA RATING & KOMENTAR SEKALIGUS
       await loadAllCommentsForRecipes();
       renderCurrentView();
     }
@@ -157,11 +149,7 @@ function deleteCommentWithConfirm(recipeId, commentId, element) {
     try {
       await deleteCommentFromAPI(commentId, recipeId);
       showToast('Komentar dihapus', 'success');
-      
-      // 🔄 Refresh seluruh tampilan
       renderCurrentView();
-      
-      // Jika modal terbuka untuk resep yang sama, buka ulang
       if (currentModalRecipe && currentModalRecipe.id == recipeId) {
         await openModal(currentModalRecipe);
       }
@@ -294,7 +282,7 @@ function renderRecipes(recipesArray, showDeleteForOwner = true) {
 }
 
 // ---------- TAMPILAN HALAMAN ----------
-let activeCategory = "Daging";
+let activeCategory = "Semua Resep";
 let currentView = "home";
 
 // ========== SLIDER ==========
@@ -315,30 +303,12 @@ function startSliderInterval(sliderElement, nextButton) {
 }
 
 function generateSliderHTML() {
-    // Data 4 makanan nusantara
     const foodSlides = [
-      {
-        name: "Rendang",
-        region: "Padang",
-        imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop",
-      },
-      {
-        name: "Sate Ayam",
-        region: "Madura",
-        imageUrl: "https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?w=800&h=500&fit=crop",
-      },
-      {
-        name: "Nasi Goreng",
-        region: "Indonesia",
-        imageUrl: "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&h=500&fit=crop",
-      },
-      {
-        name: "Gado-Gado",
-        region: "Betawi",
-        imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop",
-      }
+      { name: "Rendang", region: "Padang", imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop" },
+      { name: "Sate Ayam", region: "Madura", imageUrl: "https://images.unsplash.com/photo-1535399831218-d5bd36d1a6b3?w=800&h=500&fit=crop" },
+      { name: "Nasi Goreng", region: "Indonesia", imageUrl: "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&h=500&fit=crop" },
+      { name: "Gado-Gado", region: "Betawi", imageUrl: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?w=800&h=500&fit=crop" }
     ];
-  
     let slidesHTML = '';
     for (let food of foodSlides) {
       slidesHTML += `
@@ -348,7 +318,6 @@ function generateSliderHTML() {
         </div>
       `;
     }
-  
     return `
       <div class="slider-container">
         <div class="slider" id="dynamicSlider">
@@ -364,16 +333,13 @@ function generateSliderHTML() {
 function initSlider() {
   const slider = document.getElementById('dynamicSlider');
   if (!slider) return;
-  
   const slides = slider.querySelectorAll('.slide');
   if (slides.length === 0) return;
-  
   let currentIndex = 0;
   const totalSlides = slides.length;
   const prevBtn = document.getElementById('sliderPrev');
   const nextBtn = document.getElementById('sliderNext');
   const dotsContainer = document.getElementById('sliderDots');
-  
   dotsContainer.innerHTML = '';
   for (let i = 0; i < totalSlides; i++) {
     const dot = document.createElement('span');
@@ -383,14 +349,10 @@ function initSlider() {
     dotsContainer.appendChild(dot);
   }
   const dots = document.querySelectorAll('.dot');
-  
   function updateSlider() {
     slider.style.transform = `translateX(-${currentIndex * 100}%)`;
-    dots.forEach((dot, i) => {
-      dot.classList.toggle('active', i === currentIndex);
-    });
+    dots.forEach((dot, i) => { dot.classList.toggle('active', i === currentIndex); });
   }
-  
   function goToSlide(index) {
     if (index < 0) index = totalSlides - 1;
     if (index >= totalSlides) index = 0;
@@ -399,15 +361,11 @@ function initSlider() {
     stopSliderInterval();
     startSliderInterval(slider, nextBtn);
   }
-  
   function nextSlide() { goToSlide(currentIndex + 1); }
   function prevSlide() { goToSlide(currentIndex - 1); }
-  
   if (prevBtn) prevBtn.addEventListener('click', prevSlide);
   if (nextBtn) nextBtn.addEventListener('click', nextSlide);
-  
   startSliderInterval(slider, nextBtn);
-  
   const container = document.querySelector('.slider-container');
   if (container) {
     container.addEventListener('mouseenter', () => stopSliderInterval());
@@ -415,7 +373,7 @@ function initSlider() {
   }
 }
 
-// ========== FUNGSI HISTORY KOMENTAR LENGKAP DENGAN TANGGAL RESEP ==========
+// ========== FUNGSI HISTORY KOMENTAR ==========
 async function getAllCommentsWithRecipeDetails() {
   let allData = [];
   for (let recipe of getAllRecipes()) {
@@ -450,11 +408,9 @@ function openFullCommentHistoryModal() {
     </div>
   `;
   document.body.appendChild(modal);
-  
   const closeBtn = modal.querySelector('#closeHistoryModal');
   closeBtn.onclick = () => modal.remove();
   modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
-  
   getAllCommentsWithRecipeDetails().then(data => {
     const container = modal.querySelector('#fullHistoryList');
     if (data.length === 0) {
@@ -504,13 +460,71 @@ function renderHome() {
   `;
 }
 
+// ========== RENDER KATEGORI DENGAN SEARCH ==========
 function renderKategori() {
-  const filtered = getAllRecipes().filter(r => r.category === activeCategory);
+  // Filter berdasarkan kategori
+  let filteredByCat = [];
+  if (activeCategory === "Semua Resep") {
+    filteredByCat = getAllRecipes();
+  } else {
+    filteredByCat = getAllRecipes().filter(r => r.category === activeCategory);
+  }
+  
+  // Filter berdasarkan search query (nama, deskripsi, atau bahan)
+  let filteredRecipes = filteredByCat;
+  if (searchQueryKategori.trim() !== "") {
+    const query = searchQueryKategori.toLowerCase().trim();
+    filteredRecipes = filteredByCat.filter(recipe => {
+      // Cari di nama
+      if (recipe.name.toLowerCase().includes(query)) return true;
+      // Cari di deskripsi
+      if (recipe.description && recipe.description.toLowerCase().includes(query)) return true;
+      // Cari di bahan (array ingredients)
+      if (recipe.ingredients && recipe.ingredients.some(ing => ing.toLowerCase().includes(query))) return true;
+      return false;
+    });
+  }
+
+  // Buat chip kategori
   let chips = `<div class="category-filters">`;
-  categoriesList.forEach(cat => { chips += `<button class="cat-chip ${activeCategory===cat?'active-cat':''}" data-cat="${cat}">${cat}</button>`; });
-  chips += `</div><div class="recipes-grid">${renderRecipes(filtered, true)}</div>`;
-  return chips;
+  categoriesList.forEach(cat => { 
+    chips += `<button class="cat-chip ${activeCategory===cat?'active-cat':''}" data-cat="${cat}">${cat}</button>`; 
+  });
+  chips += `</div>`;
+
+  // Tambahkan search bar
+  const searchHTML = `
+    <div style="display: flex; justify-content: center; margin-bottom: 1.5rem; gap: 0.5rem;">
+      <input type="text" id="searchKategoriInput" placeholder="Cari resep (nama, deskripsi, bahan)..." 
+             style="flex: 1; max-width: 400px; padding: 0.6rem 1rem; border-radius: 40px; border: 1px solid var(--brown-light); background: white;" 
+             value="${escapeHtml(searchQueryKategori)}">
+      <button id="searchKategoriBtn" class="btn-submit" style="padding: 0.6rem 1.2rem; border-radius: 40px;">
+        <i class="fas fa-search"></i> Cari
+      </button>
+      ${searchQueryKategori ? `<button id="clearSearchBtn" class="btn-submit" style="background: var(--brown-medium); padding: 0.6rem 1.2rem; border-radius: 40px;">Clear</button>` : ''}
+    </div>
+  `;
+
+  const recipesHTML = `<div class="recipes-grid">${renderRecipes(filteredRecipes, true)}</div>`;
+  
+  return chips + searchHTML + recipesHTML;
 }
+
+// Fungsi untuk menangani pencarian di kategori (dipanggil dari event)
+function applySearchOnKategori() {
+  const input = document.getElementById('searchKategoriInput');
+  if (input) {
+    searchQueryKategori = input.value;
+    renderCurrentView(); // re-render halaman kategori
+  }
+}
+
+function clearSearchOnKategori() {
+  searchQueryKategori = "";
+  renderCurrentView();
+}
+
+// ========== RENDER FAVORITE ==========
 function renderFavorite() {
   if(!currentUser) return `<div class="not-found">Login untuk melihat favorit.</div>`;
   const all = getAllRecipes();
@@ -577,7 +591,7 @@ function renderTambahResep() {
       <form id="formTambahResep">
         <div class="form-grid">
           <div class="form-row"><label>Nama Resep *</label><input type="text" id="recipeName" required></div>
-          <div class="form-row"><label>Kategori</label><select id="recipeCategory">${categoriesList.map(c=>`<option>${c}</option>`).join('')}</select></div>
+          <div class="form-row"><label>Kategori</label><select id="recipeCategory">${categoriesList.filter(c => c !== "Semua Resep").map(c=>`<option>${c}</option>`).join('')}</select></div>
           <div class="form-row"><label>Deskripsi</label><input type="text" id="recipeDesc" placeholder="Deskripsi singkat resep"></div>
           <div class="form-row"><label>Foto Makanan (JPG/PNG)</label><input type="file" id="recipeImageFile" accept="image/jpeg,image/png"></div>
           <div id="imagePreviewContainer" style="display:none;"><img id="imagePreview" class="image-preview" alt="Preview"></div>
@@ -589,7 +603,7 @@ function renderTambahResep() {
     </div>`;
 }
 
-// ========== PROFIL HANYA UNTUK USER BIASA ==========
+// ========== PROFIL ==========
 function renderProfil() {
   if(!currentUser) return `<div class="not-found">Login untuk melihat profil.</div>`;
   if(currentUser.role_type === 'ADMIN') {
@@ -606,21 +620,17 @@ function renderAdminDashboard() {
   if (!currentUser || currentUser.role_type !== 'ADMIN') {
     return `<div class="not-found">Akses ditolak.</div>`;
   }
-
   const allRecipes = getAllRecipes();
   const totalRecipes = allRecipes.length;
-
   let totalComments = 0;
   for (let recipe of allRecipes) {
     totalComments += getComments(recipe.id).length;
   }
-
   return `
     <div class="page-header">
       <h2>Dashboard Admin</h2>
       <p style="color: var(--brown-dark); margin-top: 0.5rem;">Selamat datang, <strong>${currentUser.username}</strong> (Administrator)</p>
     </div>
-
     <div class="profile-stats" style="display: flex; gap: 1.5rem; justify-content: space-around; flex-wrap: wrap;">
       <div style="background: var(--green-pale); padding: 0.8rem 1.5rem; border-radius: 2rem; text-align: center;">
         <div style="font-size: 1.8rem; font-weight: bold;">${totalRecipes}</div>
@@ -631,13 +641,11 @@ function renderAdminDashboard() {
         <div style="font-size: 0.8rem;">Total Komentar</div>
       </div>
     </div>
-
     <div style="display: flex; justify-content: center; margin: 1.5rem 0;">
       <button id="fullHistoryBtn" class="btn-submit" style="background: var(--brown-dark); padding: 0.8rem 2rem; font-size: 1rem; display: inline-flex; align-items: center; gap: 10px;">
         <i class="fas fa-history"></i> 📜 Lihat Seluruh History Komentar (Lengkap dengan Tanggal Resep)
       </button>
     </div>
-
     <h3 style="margin-top: 1rem;">📋 Manajemen Semua Resep</h3>
     <div class="recipes-grid">
       ${renderRecipes(allRecipes, true)}
@@ -721,7 +729,6 @@ async function openModal(recipe) {
       const commentId = parseInt(btn.getAttribute('data-comment-id'));
       try { 
         await deleteCommentFromAPI(commentId, recipeId);
-        // setelah hapus, refresh modal dan tampilan
         renderCurrentView();
         if (currentModalRecipe && currentModalRecipe.id === recipeId) {
           await openModal(currentModalRecipe);
@@ -742,7 +749,31 @@ function attachCardEvents() {
 }
 function favHandler(e) { e.stopPropagation(); toggleFavorite(parseInt(e.currentTarget.getAttribute('data-id'))); }
 function detailHandler(e) { const id = parseInt(e.currentTarget.getAttribute('data-id')); const recipe = getAllRecipes().find(r => r.id === id); if(recipe) openModal(recipe); }
-function attachCategoryChips() { document.querySelectorAll('.cat-chip').forEach(chip => chip.onclick = () => { activeCategory = chip.getAttribute('data-cat'); renderCurrentView(); }); }
+function attachCategoryChips() { 
+  document.querySelectorAll('.cat-chip').forEach(chip => {
+    chip.onclick = () => { 
+      activeCategory = chip.getAttribute('data-cat');
+      searchQueryKategori = ""; // reset search saat ganti kategori
+      renderCurrentView(); 
+    };
+  });
+}
+function attachSearchEvents() {
+  const searchBtn = document.getElementById('searchKategoriBtn');
+  const searchInput = document.getElementById('searchKategoriInput');
+  const clearBtn = document.getElementById('clearSearchBtn');
+  if (searchBtn) {
+    searchBtn.onclick = () => applySearchOnKategori();
+  }
+  if (searchInput) {
+    searchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') applySearchOnKategori();
+    });
+  }
+  if (clearBtn) {
+    clearBtn.onclick = () => clearSearchOnKategori();
+  }
+}
 
 function attachFormSubmit() {
   const form = document.getElementById('formTambahResep');
@@ -795,7 +826,10 @@ function renderCurrentView() {
   else if(currentView === 'admin') main.innerHTML = renderAdminDashboard();
   attachCardEvents();
   if(currentView === 'home') { initSlider(); } else { stopSliderInterval(); }
-  if(currentView === 'kategori') attachCategoryChips();
+  if(currentView === 'kategori') {
+    attachCategoryChips();
+    attachSearchEvents();
+  }
   if(currentView === 'tambah') attachFormSubmit();
   if(currentView === 'admin') {
     const historyBtn = document.getElementById('fullHistoryBtn');
@@ -819,7 +853,10 @@ function setupNav() {
         showToast('Hanya admin', 'error'); return;
       }
       currentView = view;
-      if(view === 'kategori') activeCategory = "Daging";
+      if(view === 'kategori') {
+        activeCategory = "Semua Resep";
+        searchQueryKategori = ""; // reset search saat buka kategori
+      }
       highlightNav();
       renderCurrentView();
     });
