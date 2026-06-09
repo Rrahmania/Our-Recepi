@@ -1,5 +1,8 @@
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 body {
   font-family: 'Inter', sans-serif;
@@ -36,309 +39,11 @@ footer {
   --brown-medium: #8b5a3c;
   --brown-light: #c7a47b;
   --brown-cream: #f7ede0;
-  --shadow-sm: 0 8px 20px rgba(0,0,0,0.05);
-  --shadow-md: 0 12px 28px rgba(0,0,0,0.1);
+  --shadow-sm: 0 8px 20px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 12px 28px rgba(0, 0, 0, 0.1);
 }
 
-/* NAVBAR */
-.navbar {
-  background: var(--brown-cream);
-  border-radius: 3rem;
-  padding: 0.6rem 1.2rem;
-  margin-bottom: 2rem;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid #e2d4c2;
-}
-.nav-btn {
-  background: transparent;
-  border: none;
-  font-weight: 600;
-  padding: 0.7rem 1.2rem;
-  border-radius: 2.5rem;
-  cursor: pointer;
-  color: var(--brown-dark);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: 0.2s;
-}
-.nav-btn.active { background: var(--green-deep); color: white; }
-.nav-btn:hover:not(.active) { background: var(--green-pale); }
-.user-area { margin-left: auto; display: flex; gap: 12px; align-items: center; }
-.btn-auth {
-  background: var(--brown-medium);
-  color: white;
-  border: none;
-  padding: 0.5rem 1.2rem;
-  border-radius: 2rem;
-  cursor: pointer;
-  font-weight: 500;
-}
-.user-greeting { font-weight: 500; color: var(--brown-dark); background: var(--green-pale); padding: 0.3rem 1rem; border-radius: 2rem; }
-
-/* KATEGORI */
-.category-filters { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.7rem; margin-bottom: 2rem; }
-.cat-chip {
-  background: var(--brown-cream);
-  border: 1px solid var(--brown-light);
-  padding: 0.5rem 1.2rem;
-  border-radius: 40px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.cat-chip.active-cat { background: var(--green-deep); color: white; }
-
-/* GRID RESEP */
-.recipes-grid { display: grid; grid-template-columns: 1fr; gap: 1.8rem; margin: 1.5rem 0; }
-@media (min-width: 640px) { .recipes-grid { grid-template-columns: repeat(2,1fr); } }
-@media (min-width: 1024px) { .recipes-grid { grid-template-columns: repeat(3,1fr); } }
-
-.recipe-card {
-  background: var(--brown-cream);
-  border-radius: 1.8rem;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: 0.25s ease;
-  border: 1px solid #e2d4c2;
-  position: relative;
-}
-.recipe-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
-.favorite-star {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(247,237,224,0.9);
-  border-radius: 50%;
-  width: 38px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  color: #c49a6c;
-}
-.favorite-star.active-star { color: #e6b422; }
-.card-img { width: 100%; height: 180px; object-fit: cover; background: linear-gradient(135deg, #d8b48c, #c2a07a); display: block; }
-.card-content { padding: 1.2rem; }
-.recipe-title { font-size: 1.35rem; font-weight: 700; color: var(--brown-dark); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-.rating-stars { color: #f5b042; font-size: 0.8rem; letter-spacing: 2px; }
-.meta-info { font-size: 0.75rem; color: #7b5a41; margin: 0.6rem 0; display: flex; gap: 0.8rem; }
-.btn-detail, .btn-delete {
-  background: var(--brown-dark);
-  width: 100%;
-  border: none;
-  color: white;
-  padding: 0.6rem;
-  border-radius: 40px;
-  font-weight: 600;
-  margin-top: 0.8rem;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.btn-detail:hover { background: var(--green-soft); }
-.btn-delete { background: #a94442; margin-top: 0.4rem; }
-.btn-delete:hover { background: #8b3c3c; }
-
-/* FORM */
-.add-recipe-form, .comment-section { background: var(--brown-cream); border-radius: 1.8rem; padding: 1.5rem; margin-top: 1rem; border: 1px solid #e2d4c2; }
-.form-grid { display: flex; flex-direction: column; gap: 1rem; }
-.form-row { display: flex; flex-direction: column; gap: 0.3rem; }
-.form-row label { font-weight: 600; color: var(--brown-dark); font-size: 0.85rem; }
-input, select, textarea { padding: 0.7rem 1rem; border-radius: 1rem; border: 1px solid #dac09e; background: #fffcf7; font-family: inherit; outline: none; transition: 0.2s; }
-input:focus, select:focus, textarea:focus { border-color: var(--green-soft); box-shadow: 0 0 0 3px rgba(86,143,75,0.2); }
-.btn-submit { background: var(--green-deep); color: white; border: none; padding: 0.8rem; border-radius: 3rem; font-weight: bold; cursor: pointer; }
-.image-preview {
-  width: 100%;
-  max-height: 150px;
-  object-fit: cover;
-  border-radius: 1rem;
-  margin-top: 0.5rem;
-  border: 1px solid var(--brown-light);
-  background: #e9dbc9;
-}
-
-/* MODAL KONFIRMASI CUSTOM */
-.confirm-modal {
-  display: none;
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(30,25,20,0.8);
-  backdrop-filter: blur(4px);
-  z-index: 2000;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-.confirm-content {
-  background: #fffaf3;
-  max-width: 380px;
-  width: 100%;
-  border-radius: 2rem;
-  padding: 1.8rem;
-  text-align: center;
-  border: 1px solid var(--brown-light);
-  box-shadow: var(--shadow-md);
-}
-.confirm-content p { margin: 1rem 0; font-size: 1rem; color: var(--brown-dark); }
-.confirm-buttons { display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem; }
-.confirm-yes, .confirm-no { padding: 0.5rem 1.8rem; border-radius: 3rem; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
-.confirm-yes { background: var(--green-deep); color: white; }
-.confirm-yes:hover { background: var(--green-soft); }
-.confirm-no { background: #a94442; color: white; }
-.confirm-no:hover { background: #8b3c3c; }
-
-/* MODAL BIASA */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(30,25,20,0.85);
-  backdrop-filter: blur(5px);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-.modal-content {
-  background: #fffaf3;
-  max-width: 700px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  border-radius: 2rem;
-  padding: 1.5rem;
-  position: relative;
-  border: 1px solid var(--brown-light);
-}
-.close-modal { position: absolute; right: 1.2rem; top: 1rem; font-size: 1.8rem; background: none; border: none; cursor: pointer; color: var(--brown-dark); }
-.modal-img { width: 100%; max-height: 250px; object-fit: cover; border-radius: 1rem; margin-bottom: 1rem; background: #e2cfb0; }
-
-.comment-item {
-  background: #f1e8dc;
-  border-radius: 1rem;
-  padding: 0.8rem;
-  margin-bottom: 0.8rem;
-  border-left: 4px solid var(--green-soft);
-  transition: opacity 0.2s ease;
-}
-.delete-comment-btn {
-  background: rgba(169, 68, 66, 0.9);
-  border: none;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 30px;
-  cursor: pointer;
-  font-size: 0.7rem;
-  margin-top: 6px;
-  transition: all 0.2s ease;
-}
-.delete-comment-btn:hover { background: #8b3c3c; transform: scale(0.96); }
-.star-rating-input i { cursor: pointer; font-size: 1.4rem; margin-right: 5px; color: #ccc; }
-.star-rating-input i.selected { color: #f5b042; }
-
-.not-found { text-align: center; background: var(--brown-cream); padding: 2rem; border-radius: 2rem; }
-.profile-stats { display: flex; gap: 1rem; margin-bottom: 1rem; background: var(--brown-cream); padding: 0.8rem 1.2rem; border-radius: 2rem; }
-.warning { color: #a94442; background: #f2dede; padding: 0.5rem; border-radius: 1rem; text-align: center; margin-top: 0.5rem; }
-.login-prompt { background: #e9dbc9; padding: 0.8rem; border-radius: 2rem; text-align: center; margin-top: 1rem; }
-
-/* ========== SLIDER / CAROUSEL (TAMBAHAN) ========== */
-.slider-container {
-  position: relative;
-  max-width: 100%;
-  margin-bottom: 2rem;
-  border-radius: 2rem;
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-  background: var(--brown-cream);
-}
-
-.slider {
-  display: flex;
-  transition: transform 0.5s ease-in-out;
-}
-
-.slide {
-  min-width: 100%;
-  position: relative;
-  height: 280px;
-  overflow: hidden;
-}
-
-.slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.slide-caption {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-  color: white;
-  padding: 1.5rem 1rem 0.8rem;
-  font-weight: bold;
-  font-size: 1.3rem;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-}
-
-/* Tombol navigasi */
-.prev, .next {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.5);
-  color: white;
-  border: none;
-  padding: 12px 16px;
-  cursor: pointer;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  transition: 0.2s;
-  z-index: 10;
-}
-.prev { left: 16px; }
-.next { right: 16px; }
-.prev:hover, .next:hover {
-  background: rgba(0,0,0,0.8);
-}
-
-/* Indikator titik */
-.dots {
-  text-align: center;
-  padding: 12px 0;
-  background: var(--brown-cream);
-}
-.dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  margin: 0 6px;
-  background-color: #c7a47b;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.dot.active {
-  background-color: var(--green-deep);
-  width: 24px;
-  border-radius: 8px;
-}
-
-@media (max-width: 640px) {
-  .slide { height: 200px; }
-  .slide-caption { font-size: 1rem; padding: 1rem 0.5rem 0.5rem; }
-  .prev, .next { padding: 8px 12px; }
-}
-/* ========== NAVBAR UNIK ========== */
+/* ========== NAVBAR ========== */
 .navbar {
   background: rgba(247, 237, 224, 0.7);
   backdrop-filter: blur(12px);
@@ -353,6 +58,24 @@ input:focus, select:focus, textarea:focus { border-color: var(--green-soft); box
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(224, 196, 156, 0.4);
   border: 1px solid rgba(255, 245, 230, 0.6);
   transition: all 0.3s ease;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  margin-right: 1rem;
+}
+
+.navbar-logo img {
+  height: 70px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  transition: transform 0.2s ease;
+}
+
+.navbar-logo img:hover {
+  transform: scale(1.02);
 }
 
 .nav-btn {
@@ -411,10 +134,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--green-soft); box
 
 .nav-btn.active i {
   color: #ffd966;
-  text-shadow: 0 0 2px rgba(0,0,0,0.2);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
-/* User Area Styling */
 .user-area {
   margin-left: auto;
   display: flex;
@@ -441,7 +163,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--green-soft); box
 .user-greeting::before {
   content: "👤";
   font-size: 1rem;
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
 }
 
 .btn-auth {
@@ -456,7 +178,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--green-soft); box
   align-items: center;
   gap: 8px;
   transition: all 0.2s;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .btn-auth i {
@@ -466,10 +188,530 @@ input:focus, select:focus, textarea:focus { border-color: var(--green-soft); box
 .btn-auth:hover {
   background: linear-gradient(120deg, #5a3d2f, #734a2e);
   transform: scale(1.02);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Responsive navbar */
+/* ========== KATEGORI ========== */
+.category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-bottom: 2rem;
+}
+
+.cat-chip {
+  background: var(--brown-cream);
+  border: 1px solid var(--brown-light);
+  padding: 0.5rem 1.2rem;
+  border-radius: 40px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cat-chip.active-cat {
+  background: var(--green-deep);
+  color: white;
+}
+
+/* ========== GRID RESEP ========== */
+.recipes-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.8rem;
+  margin: 1.5rem 0;
+}
+
+@media (min-width: 640px) {
+  .recipes-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .recipes-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.recipe-card {
+  background: var(--brown-cream);
+  border-radius: 1.8rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: 0.25s ease;
+  border: 1px solid #e2d4c2;
+  position: relative;
+}
+
+.recipe-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+.favorite-star {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(247, 237, 224, 0.9);
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  color: #c49a6c;
+}
+
+.favorite-star.active-star {
+  color: #e6b422;
+}
+
+.card-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  background: linear-gradient(135deg, #d8b48c, #c2a07a);
+  display: block;
+}
+
+.card-content {
+  padding: 1.2rem;
+}
+
+.recipe-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--brown-dark);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.rating-stars {
+  color: #f5b042;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+}
+
+.meta-info {
+  font-size: 0.75rem;
+  color: #7b5a41;
+  margin: 0.6rem 0;
+  display: flex;
+  gap: 0.8rem;
+}
+
+.btn-detail,
+.btn-delete {
+  background: var(--brown-dark);
+  width: 100%;
+  border: none;
+  color: white;
+  padding: 0.6rem;
+  border-radius: 40px;
+  font-weight: 600;
+  margin-top: 0.8rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-detail:hover {
+  background: var(--green-soft);
+}
+
+.btn-delete {
+  background: #a94442;
+  margin-top: 0.4rem;
+}
+
+.btn-delete:hover {
+  background: #8b3c3c;
+}
+
+/* ========== FORM ========== */
+.add-recipe-form,
+.comment-section {
+  background: var(--brown-cream);
+  border-radius: 1.8rem;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  border: 1px solid #e2d4c2;
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.form-row label {
+  font-weight: 600;
+  color: var(--brown-dark);
+  font-size: 0.85rem;
+}
+
+input,
+select,
+textarea {
+  padding: 0.7rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid #dac09e;
+  background: #fffcf7;
+  font-family: inherit;
+  outline: none;
+  transition: 0.2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--green-soft);
+  box-shadow: 0 0 0 3px rgba(86, 143, 75, 0.2);
+}
+
+.btn-submit {
+  background: var(--green-deep);
+  color: white;
+  border: none;
+  padding: 0.8rem;
+  border-radius: 3rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.image-preview {
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 1rem;
+  margin-top: 0.5rem;
+  border: 1px solid var(--brown-light);
+  background: #e9dbc9;
+}
+
+/* ========== MODAL KONFIRMASI ========== */
+.confirm-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(30, 25, 20, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.confirm-content {
+  background: #fffaf3;
+  max-width: 380px;
+  width: 100%;
+  border-radius: 2rem;
+  padding: 1.8rem;
+  text-align: center;
+  border: 1px solid var(--brown-light);
+  box-shadow: var(--shadow-md);
+}
+
+.confirm-content p {
+  margin: 1rem 0;
+  font-size: 1rem;
+  color: var(--brown-dark);
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.confirm-yes,
+.confirm-no {
+  padding: 0.5rem 1.8rem;
+  border-radius: 3rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: 0.2s;
+}
+
+.confirm-yes {
+  background: var(--green-deep);
+  color: white;
+}
+
+.confirm-yes:hover {
+  background: var(--green-soft);
+}
+
+.confirm-no {
+  background: #a94442;
+  color: white;
+}
+
+.confirm-no:hover {
+  background: #8b3c3c;
+}
+
+/* ========== MODAL UMUM (termasuk perbaikan tombol close) ========== */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(30, 25, 20, 0.85);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: #fffaf3;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 2rem;
+  padding: 1.5rem;
+  position: relative;
+  border: 1px solid var(--brown-light);
+}
+
+/* PERBAIKAN TOMBOL CLOSE (X) - TIDAK BENING */
+.close-modal {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  font-size: 1.6rem;
+  font-weight: bold;
+  background: rgba(92, 62, 43, 0.2);
+  color: #5c3e2b;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  backdrop-filter: blur(2px);
+}
+
+.close-modal:hover {
+  background: #a94442;
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Penyesuaian tambahan untuk modal dengan latar gelap */
+.modal .close-modal {
+  background: rgba(247, 237, 224, 0.85);
+  color: #5c3e2b;
+}
+
+.modal .close-modal:hover {
+  background: #a94442;
+  color: white;
+}
+
+.modal-img {
+  width: 100%;
+  max-height: 250px;
+  object-fit: cover;
+  border-radius: 1rem;
+  margin-bottom: 1rem;
+  background: #e2cfb0;
+}
+
+/* ========== KOMPONEN KOMENTAR ========== */
+.comment-item {
+  background: #f1e8dc;
+  border-radius: 1rem;
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  border-left: 4px solid var(--green-soft);
+  transition: opacity 0.2s ease;
+}
+
+.delete-comment-btn {
+  background: rgba(169, 68, 66, 0.9);
+  border: none;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  margin-top: 6px;
+  transition: all 0.2s ease;
+}
+
+.delete-comment-btn:hover {
+  background: #8b3c3c;
+  transform: scale(0.96);
+}
+
+.star-rating-input i {
+  cursor: pointer;
+  font-size: 1.4rem;
+  margin-right: 5px;
+  color: #ccc;
+}
+
+.star-rating-input i.selected {
+  color: #f5b042;
+}
+
+.not-found {
+  text-align: center;
+  background: var(--brown-cream);
+  padding: 2rem;
+  border-radius: 2rem;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  background: var(--brown-cream);
+  padding: 0.8rem 1.2rem;
+  border-radius: 2rem;
+}
+
+.warning {
+  color: #a94442;
+  background: #f2dede;
+  padding: 0.5rem;
+  border-radius: 1rem;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.login-prompt {
+  background: #e9dbc9;
+  padding: 0.8rem;
+  border-radius: 2rem;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* ========== SLIDER / CAROUSEL ========== */
+.slider-container {
+  position: relative;
+  max-width: 100%;
+  margin-bottom: 2rem;
+  border-radius: 2rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  background: var(--brown-cream);
+}
+
+.slider {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+}
+
+.slide {
+  min-width: 100%;
+  position: relative;
+  height: 280px;
+  overflow: hidden;
+}
+
+.slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.slide-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+  color: white;
+  padding: 1.5rem 1rem 0.8rem;
+  font-weight: bold;
+  font-size: 1.3rem;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.prev,
+.next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  transition: 0.2s;
+  z-index: 10;
+}
+
+.prev {
+  left: 16px;
+}
+
+.next {
+  right: 16px;
+}
+
+.prev:hover,
+.next:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.dots {
+  text-align: center;
+  padding: 12px 0;
+  background: var(--brown-cream);
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 0 6px;
+  background-color: #c7a47b;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.dot.active {
+  background-color: var(--green-deep);
+  width: 24px;
+  border-radius: 8px;
+}
+
+/* ========== RESPONSIVE ========== */
 @media (max-width: 780px) {
   .navbar {
     padding: 0.8rem 1rem;
@@ -477,22 +719,30 @@ input:focus, select:focus, textarea:focus { border-color: var(--green-soft); box
     justify-content: center;
     border-radius: 2rem;
   }
+
   .nav-btn {
     padding: 0.5rem 1rem;
     font-size: 0.8rem;
   }
+
   .nav-btn i {
     font-size: 0.9rem;
   }
+
   .user-area {
     margin-left: 0;
     margin-top: 6px;
     width: auto;
     justify-content: center;
   }
+
   .user-greeting {
     font-size: 0.7rem;
     padding: 0.2rem 0.6rem;
+  }
+
+  .navbar-logo img {
+    height: 44px;
   }
 }
 
@@ -501,67 +751,40 @@ input:focus, select:focus, textarea:focus { border-color: var(--green-soft); box
     flex-direction: row;
     flex-wrap: wrap;
   }
+
   .nav-btn {
     flex: 1 0 auto;
     justify-content: center;
   }
+
   .user-area {
     width: 100%;
     justify-content: space-between;
     margin-top: 8px;
     background: rgba(224, 196, 156, 0.5);
   }
-}
-/* Logo di navbar */
-.navbar-logo {
-    display: flex;
-    align-items: center;
-    margin-right: 1rem;
+
+  .navbar-logo {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 6px;
   }
+
   .navbar-logo img {
-    height: 42px;         /* sesuaikan dengan tinggi navbar */
-    width: auto;
-    object-fit: contain;
-    border-radius: 12px;
-    transition: transform 0.2s ease;
+    height: 40px;
   }
-  .navbar-logo img:hover {
-    transform: scale(1.02);
+
+  .slide {
+    height: 200px;
   }
-  
-  /* Agar navbar tetap rapi di layar kecil */
-  @media (max-width: 780px) {
-    .navbar-logo img {
-      height: 34px;
-    }
+
+  .slide-caption {
+    font-size: 1rem;
+    padding: 1rem 0.5rem 0.5rem;
   }
-  @media (max-width: 580px) {
-    .navbar-logo {
-      width: 100%;
-      justify-content: center;
-      margin-bottom: 6px;
-    }
-    .navbar {
-      flex-wrap: wrap;
-    }
+
+  .prev,
+  .next {
+    padding: 8px 12px;
   }
-  /* Perbesar logo */
-.navbar-logo img {
-    height: 70px;   /* sebelumnya 42px, sekarang lebih besar */
-    width: auto;
-    object-fit: contain;
-    border-radius: 12px;
-    transition: transform 0.2s ease;
-  }
-  
-  /* Tetap proporsional di layar kecil */
-  @media (max-width: 780px) {
-    .navbar-logo img {
-      height: 44px;
-    }
-  }
-  @media (max-width: 580px) {
-    .navbar-logo img {
-      height: 40px;
-    }
-  }
+}
